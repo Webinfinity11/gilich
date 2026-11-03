@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { effectivePrice, parseJson } from "@/lib/catalog";
+import { effectivePrice, parseJson, variationName } from "@/lib/catalog";
 
 export type FormState = { ok: boolean; message: string } | null;
 
@@ -92,13 +92,12 @@ export async function placeOrder(input: {
       const v = product.variations.find((x) => x.id === line.variationId);
       if (!v) return { ok: false, message: m.options(product.name) };
       if (v.stock !== null && v.stock < line.qty) return { ok: false, message: m.stock(product.name) };
-      const opts = parseJson<Record<string, string>>(v.options, {});
       items.push({
         productId: product.id,
         variationId: v.id,
         name: product.name,
-        variation: Object.entries(opts).map(([k, val]) => `${k}: ${val}`).join(", "),
-        image: v.image ?? product.images[0]?.url ?? null,
+        variation: variationName(v),
+        image: parseJson<string[]>(v.images, [])[0] ?? v.image ?? product.images[0]?.url ?? null,
         price: effectivePrice(v),
         quantity: line.qty,
       });

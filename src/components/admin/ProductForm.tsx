@@ -3,56 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { saveProduct, uploadImages, type ProductInput } from "@/app/admin/actions";
-import type { Attribute } from "@/lib/catalog";
+import { saveProduct, uploadImages, type ProductInput, type VariationInput } from "@/app/admin/actions";
 import { slugify } from "@/lib/slug";
 import { ImageUploader } from "./ImageUploader";
 
 type Category = { id: number; name: string; parentId: number | null };
-type Variation = ProductInput["variations"][number];
 
-/** All combinations of attribute values, e.g. Size × Color */
-function combinations(attrs: Attribute[]): Record<string, string>[] {
-  return attrs.reduce<Record<string, string>[]>(
-    (acc, a) => acc.flatMap((combo) => a.values.map((v) => ({ ...combo, [a.name]: v }))),
-    [{}],
-  );
-}
-
-const sameOptions = (a: Record<string, string>, b: Record<string, string>) =>
-  Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([k, v]) => b[k] === v);
-
-/** Rebuild the variation list for the attributes, keeping data of combinations that still exist */
-function syncVariations(attrs: Attribute[], current: Variation[], basePrice: string): Variation[] {
-  const usable = attrs.filter((a) => a.name.trim() && a.values.length);
-  if (!usable.length) return [];
-  return combinations(usable).map(
-    (options) =>
-      current.find((v) => sameOptions(v.options, options)) ?? { options, sku: "", price: current[0]?.price ?? basePrice, salePrice: "", stock: "", image: null },
-  );
-}
-
-// Common colour names -> swatch, so a typed "Gold" gets a sensible default
-const knownColors: Record<string, string> = {
-  gold: "#d4af37",
-  "yellow gold": "#d4af37",
-  "rose gold": "#b76e79",
-  "white gold": "#e8e6e1",
-  silver: "#c0c0c0",
-  platinum: "#e5e4e2",
-  black: "#111111",
-  white: "#ffffff",
-  red: "#c0392b",
-  blue: "#2563eb",
-  green: "#15803d",
-  pink: "#f9a8d4",
-  ოქრო: "#d4af37",
-  "ვარდისფერი ოქრო": "#b76e79",
-  "თეთრი ოქრო": "#e8e6e1",
-  ვერცხლი: "#c0c0c0",
-  შავი: "#111111",
-  თეთრი: "#ffffff",
-};
+const emptyVariation = (): VariationInput => ({ name: "", color: "", sku: "", price: "", salePrice: "", stock: "", inStock: true, images: [] });
 
 export function ProductForm({ initial, categories, saved }: { initial: ProductInput; categories: Category[]; saved?: boolean }) {
   const router = useRouter();
@@ -61,44 +18,23 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(saved ? { ok: true, text: "შენახულია" } : null);
   const [pending, startTransition] = useTransition();
   const [descLang, setDescLang] = useState<"en" | "ka">("en");
-  const [type, setType] = useState<"simple" | "variable">(initial.variations.length ? "variable" : "simple");
 
   const set = <K extends keyof ProductInput>(key: K, value: ProductInput[K]) => setP((prev) => ({ ...prev, [key]: value }));
-
-  /** Change attributes and regenerate variations in one step */
-  const setAttributes = (fn: (attrs: Attribute[]) => Attribute[], renameFrom?: { from: string; to: string }) =>
-    setP((prev) => {
-      const attributes = fn(prev.attributes);
-      let current = prev.variations;
-      if (renameFrom) {
-        current = current.map((v) => {
-          if (!(renameFrom.from in v.options)) return v;
-          const { [renameFrom.from]: value, ...rest } = v.options;
-          return { ...v, options: { ...rest, [renameFrom.to]: value } };
-        });
-      }
-      return { ...prev, attributes, variations: syncVariations(attributes, current, prev.price) };
+  const setVariations = (fn: (list: VariationInput[]) => VariationInput[]) => setP((prev) => ({ ...prev, variations: fn(prev.variations) }));
+  const setVar = (i: number, patch: Partial<VariationInput>) => setVariations((list) => list.map((v, j) => (j === i ? { ...v, ...patch } : v)));
+  const moveVar = (i: number, to: number) =>
+    setVariations((list) => {
+      if (to < 0 || to >= list.length) return list;
+      const next = [...list];
+      const [item] = next.splice(i, 1);
+      next.splice(to, 0, item);
+      return next;
     });
-
-  const setVar = (i: number, patch: Partial<Variation>) => set("variations", p.variations.map((v, j) => (j === i ? { ...v, ...patch } : v)));
-
-  const uploadVariationImage = async (i: number, file: File) => {
-    const fd = new FormData();
-    fd.append("files", file);
-    const res = await uploadImages(fd);
-    if (res.error) return setMessage({ ok: false, text: res.error });
-    const url = res.urls[0];
-    setVar(i, { image: url });
-    // Also add to the gallery so it shows among product photos
-    if (url && !p.images.includes(url)) setP((prev) => ({ ...prev, images: [...prev.images, url] }));
-  };
 
   const submit = () => {
     setMessage(null);
-    if (type === "variable" && !p.variations.length) return setMessage({ ok: false, text: "დაამატეთ ატრიბუტი მნიშვნელობებით, ან აირჩიეთ „მარტივი პროდუქტი“" });
-    const payload: ProductInput = type === "simple" ? { ...p, attributes: [], variations: [] } : p;
     startTransition(async () => {
-      const res = await saveProduct(payload);
+      const res = await saveProduct(p);
       if (res.ok && res.id) {
         // The page remounts the form with fresh data; ?saved=1 carries the success notice
         router.replace(`/admin/products/${res.id}?saved=1`);
@@ -112,6 +48,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
   const topLevel = categories.filter((c) => !c.parentId);
   const childrenOf = (id: number) => categories.filter((c) => c.parentId === id);
   const toggleCat = (id: number) => set("categoryIds", p.categoryIds.includes(id) ? p.categoryIds.filter((c) => c !== id) : [...p.categoryIds, id]);
+  const hasVariations = p.variations.length > 0;
 
   return (
     <form
@@ -191,105 +128,63 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="mb-4 font-semibold">ფოტოები</h2>
+          <h2 className="mb-4 font-semibold">სურათები</h2>
           <ImageUploader value={p.images} onChange={(images) => set("images", images)} />
         </section>
 
         <section className="admin-card p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-semibold">ფასი და ვარიაციები</h2>
-            <div className="flex rounded-lg bg-zinc-100 p-1 text-sm">
-              {(["simple", "variable"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setType(t)}
-                  className={`rounded-md px-3 py-1.5 ${type === t ? "bg-white shadow-sm" : "text-zinc-600"}`}
-                >
-                  {t === "simple" ? "მარტივი პროდუქტი" : "ვარიაციებით"}
-                </button>
-              ))}
-            </div>
+          <h2 className="font-semibold">ფასი</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-4">
+            <label className="block text-sm font-medium">
+              ფასი ($) *
+              <input type="number" step="0.01" min="0" required value={p.price} onChange={(e) => set("price", e.target.value)} className="admin-input mt-1" />
+            </label>
+            <label className="block text-sm font-medium">
+              ფასდაკლებით
+              <input type="number" step="0.01" min="0" placeholder="არა" value={p.salePrice} onChange={(e) => set("salePrice", e.target.value)} className="admin-input mt-1" />
+            </label>
+            {!hasVariations && (
+              <>
+                <label className="block text-sm font-medium">
+                  მარაგი (ც.)
+                  <input type="number" min="0" placeholder="არ ითვლება" value={p.stock} onChange={(e) => set("stock", e.target.value)} className="admin-input mt-1" />
+                </label>
+                <label className="block text-sm font-medium">
+                  SKU / კოდი
+                  <input value={p.sku} onChange={(e) => set("sku", e.target.value)} className="admin-input mt-1" />
+                </label>
+              </>
+            )}
+          </div>
+        </section>
+
+        <section className="admin-card p-5">
+          <h2 className="font-semibold">ფერები / ვარიაციები ({p.variations.length})</h2>
+          <p className="mt-2 text-sm text-zinc-500">
+            ცარიელი ფასი = პროდუქტის ფასი. ცარიელი მარაგი = არ ითვლება. თუ ვარიაციას ფოტო არ აქვს, პროდუქტის ფოტო ჩანს. პირველი ვარიაცია საიტზე ავტომატურად არჩეულია.
+          </p>
+
+          <div className="mt-4 space-y-4">
+            {p.variations.map((v, i) => (
+              <VariationCard
+                key={v.id ?? `new-${i}`}
+                index={i}
+                total={p.variations.length}
+                v={v}
+                productPrice={p.price}
+                productImages={p.images}
+                onChange={(patch) => setVar(i, patch)}
+                onMove={(to) => moveVar(i, to)}
+                onDuplicate={() => setVariations((list) => [...list.slice(0, i + 1), { ...v, id: undefined, name: `${v.name} (ასლი)`, sku: "" }, ...list.slice(i + 1)])}
+                onRemove={() => setVariations((list) => list.filter((_, j) => j !== i))}
+                onError={(text) => setMessage({ ok: false, text })}
+              />
+            ))}
           </div>
 
-          {type === "simple" ? (
-            <div className="mt-5 grid gap-4 sm:grid-cols-4">
-              <label className="block text-sm font-medium">
-                ფასი ($) *
-                <input type="number" step="0.01" min="0" required value={p.price} onChange={(e) => set("price", e.target.value)} className="admin-input mt-1" />
-              </label>
-              <label className="block text-sm font-medium">
-                ფასდაკლებული ფასი
-                <input type="number" step="0.01" min="0" value={p.salePrice} onChange={(e) => set("salePrice", e.target.value)} className="admin-input mt-1" />
-              </label>
-              <label className="block text-sm font-medium">
-                მარაგი
-                <input type="number" min="0" placeholder="∞" value={p.stock} onChange={(e) => set("stock", e.target.value)} className="admin-input mt-1" />
-              </label>
-              <label className="block text-sm font-medium">
-                SKU
-                <input value={p.sku} onChange={(e) => set("sku", e.target.value)} className="admin-input mt-1" />
-              </label>
-            </div>
-          ) : (
-            <div className="mt-5 space-y-6">
-              <AttributesEditor attributes={p.attributes} onChange={setAttributes} />
-
-              {p.variations.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="text-sm font-medium">ვარიაციები ({p.variations.length})</p>
-                    <p className="text-xs text-zinc-500">თითოეულ ვარიაციას აქვს საკუთარი ფასი, მარაგი და ფოტო. საიტზე არჩევისას ეს მონაცემები შეიცვლება.</p>
-                  </div>
-                  <BulkFill onApply={(patch) => set("variations", p.variations.map((v) => ({ ...v, ...patch })))} />
-                  {p.variations.map((v, i) => (
-                    <div key={JSON.stringify(v.options)} className="rounded-lg border border-zinc-200 p-3">
-                      <div className="mb-3 flex items-center justify-between gap-2">
-                        <div className="flex flex-wrap gap-1.5">
-                          {Object.entries(v.options).map(([k, val]) => {
-                            const attr = p.attributes.find((a) => a.name === k);
-                            const hex = attr?.type === "color" ? attr.colors?.[val] : undefined;
-                            return (
-                              <span key={k} className="inline-flex items-center gap-1.5 rounded bg-zinc-100 px-2 py-0.5 text-xs">
-                                {hex && <span className="size-3 rounded-full ring-1 ring-black/15" style={{ background: hex }} />}
-                                {k}: <b>{val}</b>
-                              </span>
-                            );
-                          })}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setVar(i, { stock: v.stock === "0" ? "" : "0" })}
-                          className={`text-xs hover:underline ${v.stock === "0" ? "text-green-700" : "text-zinc-500"}`}
-                        >
-                          {v.stock === "0" ? "მარაგში დაბრუნება" : "არ არის მარაგში"}
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-[72px_1fr_1fr_1fr_1fr]">
-                        <VariationImage image={v.image} gallery={p.images} onPick={(url) => setVar(i, { image: url })} onUpload={(file) => uploadVariationImage(i, file)} />
-                        <label className="block text-xs">
-                          ფასი ($) *
-                          <input type="number" step="0.01" min="0" required value={v.price} onChange={(e) => setVar(i, { price: e.target.value })} className="admin-input mt-1" />
-                        </label>
-                        <label className="block text-xs">
-                          ფასდაკლება
-                          <input type="number" step="0.01" min="0" value={v.salePrice} onChange={(e) => setVar(i, { salePrice: e.target.value })} className="admin-input mt-1" />
-                        </label>
-                        <label className="block text-xs">
-                          მარაგი
-                          <input type="number" min="0" placeholder="∞" value={v.stock} onChange={(e) => setVar(i, { stock: e.target.value })} className="admin-input mt-1" />
-                        </label>
-                        <label className="block text-xs">
-                          SKU
-                          <input value={v.sku} onChange={(e) => setVar(i, { sku: e.target.value })} className="admin-input mt-1" />
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <button type="button" onClick={() => setVariations((list) => [...list, emptyVariation()])} className="admin-btn-ghost mt-4">
+            + ვარიაციის დამატება
+          </button>
         </section>
       </div>
 
@@ -346,227 +241,162 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
   );
 }
 
-/** Attributes (Color, Size, ...) with chip values; colour attributes get a colour picker per value */
-function AttributesEditor({
-  attributes,
+const iconBtn = "flex size-10 items-center justify-center rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:opacity-30";
+
+function VariationCard({
+  index,
+  total,
+  v,
+  productPrice,
+  productImages,
   onChange,
+  onMove,
+  onDuplicate,
+  onRemove,
+  onError,
 }: {
-  attributes: Attribute[];
-  onChange: (fn: (attrs: Attribute[]) => Attribute[], rename?: { from: string; to: string }) => void;
+  index: number;
+  total: number;
+  v: VariationInput;
+  productPrice: string;
+  productImages: string[];
+  onChange: (patch: Partial<VariationInput>) => void;
+  onMove: (to: number) => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+  onError: (text: string) => void;
 }) {
-  const [drafts, setDrafts] = useState<Record<number, string>>({});
-  const has = (name: string) => attributes.some((a) => a.name.toLowerCase() === name.toLowerCase());
-  const update = (i: number, fn: (a: Attribute) => Attribute) => onChange((list) => list.map((a, j) => (j === i ? fn(a) : a)));
-
-  const addValues = (i: number, raw: string) => {
-    const parts = raw.split(",").map((v) => v.trim()).filter(Boolean);
-    if (!parts.length) return;
-    update(i, (a) => {
-      const values = [...a.values];
-      const colors = { ...a.colors };
-      for (const v of parts) {
-        if (values.includes(v)) continue;
-        values.push(v);
-        if (a.type === "color") colors[v] = knownColors[v.toLowerCase()] ?? "#cccccc";
-      }
-      return a.type === "color" ? { ...a, values, colors } : { ...a, values };
-    });
-    setDrafts((d) => ({ ...d, [i]: "" }));
-  };
-
-  return (
-    <div>
-      <p className="mb-1 text-sm font-medium">ატრიბუტები</p>
-      <p className="mb-3 text-xs text-zinc-500">
-        დაამატეთ მაგ. „ფერი“ და „ზომა“, ჩაწერეთ მნიშვნელობები და დააჭირეთ Enter-ს. ყველა კომბინაციის ვარიაცია ავტომატურად შეიქმნება ქვემოთ.
-      </p>
-
-      <div className="space-y-3">
-        {attributes.map((a, i) => (
-          <div key={i} className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                value={a.name}
-                onChange={(e) => {
-                  const to = e.target.value;
-                  onChange((list) => list.map((x, j) => (j === i ? { ...x, name: to } : x)), { from: a.name, to });
-                }}
-                placeholder="სახელი (მაგ. Size)"
-                className="admin-input w-40"
-              />
-              <div className="flex rounded-lg bg-zinc-100 p-0.5 text-xs">
-                {(["button", "color"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() =>
-                      update(i, (x) =>
-                        t === "color"
-                          ? { ...x, type: "color", colors: Object.fromEntries(x.values.map((v) => [v, x.colors?.[v] ?? knownColors[v.toLowerCase()] ?? "#cccccc"])) }
-                          : { name: x.name, values: x.values, images: x.images },
-                      )
-                    }
-                    className={`rounded-md px-2.5 py-1 ${(a.type ?? "button") === t ? "bg-white shadow-sm" : "text-zinc-600"}`}
-                  >
-                    {t === "button" ? "ღილაკები" : "ფერები"}
-                  </button>
-                ))}
-              </div>
-              <button type="button" onClick={() => onChange((list) => list.filter((_, j) => j !== i))} className="ml-auto text-xs text-red-600 hover:underline">
-                ატრიბუტის წაშლა
-              </button>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {a.values.map((v) => (
-                <span key={v} className="inline-flex items-center gap-1.5 rounded-full bg-white py-1 pl-1.5 pr-2 text-sm ring-1 ring-zinc-200">
-                  {a.type === "color" ? (
-                    <label className="relative size-5 cursor-pointer overflow-hidden rounded-full ring-1 ring-black/15" style={{ background: a.colors?.[v] ?? "#cccccc" }} title="ფერის შეცვლა">
-                      <input
-                        type="color"
-                        value={a.colors?.[v] ?? "#cccccc"}
-                        onChange={(e) => update(i, (x) => ({ ...x, colors: { ...x.colors, [v]: e.target.value } }))}
-                        className="absolute inset-0 cursor-pointer opacity-0"
-                      />
-                    </label>
-                  ) : (
-                    <span className="w-0.5" />
-                  )}
-                  {v}
-                  <button
-                    type="button"
-                    aria-label={`${v} წაშლა`}
-                    onClick={() =>
-                      update(i, (x) => {
-                        const values = x.values.filter((y) => y !== v);
-                        const without = <T,>(map: Record<string, T> = {}) => Object.fromEntries(Object.entries(map).filter(([k]) => k !== v));
-                        if (x.type !== "color") return { ...x, values, images: without(x.images) };
-                        return { ...x, values, colors: without(x.colors), images: without(x.images) };
-                      })
-                    }
-                    className="text-zinc-400 hover:text-red-600"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-              <input
-                value={drafts[i] ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val.endsWith(",")) addValues(i, val);
-                  else setDrafts((d) => ({ ...d, [i]: val }));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addValues(i, drafts[i] ?? "");
-                  }
-                }}
-                onBlur={() => addValues(i, drafts[i] ?? "")}
-                placeholder={a.type === "color" ? "+ ფერი (მაგ. Gold)" : "+ მნიშვნელობა (მაგ. 17)"}
-                className="admin-input !w-48 !py-1.5"
-              />
-            </div>
-
-            {a.values.length > 0 && (
-              <details className="mt-3 rounded-lg bg-white p-3 ring-1 ring-zinc-200" open={Object.values(a.images ?? {}).some((l) => l.length > 0)}>
-                <summary className="cursor-pointer text-sm font-medium">
-                  ფოტოები თითოეული მნიშვნელობისთვის
-                  <span className="ml-1 font-normal text-zinc-500">(არჩევისას საიტზე შეიცვლება მთავარი ფოტო და გალერეა)</span>
-                </summary>
-                <div className="mt-3 space-y-3">
-                  {a.values.map((v) => (
-                    <ValueGallery
-                      key={v}
-                      label={v}
-                      color={a.type === "color" ? a.colors?.[v] : undefined}
-                      images={a.images?.[v] ?? []}
-                      onChange={(urls) => update(i, (x) => ({ ...x, images: { ...x.images, [v]: urls } }))}
-                    />
-                  ))}
-                </div>
-              </details>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {!has("Color") && (
-          <button type="button" onClick={() => onChange((list) => [...list, { name: "Color", values: [], type: "color", colors: {} }])} className="admin-btn-ghost">
-            + ფერი
-          </button>
-        )}
-        {!has("Size") && (
-          <button type="button" onClick={() => onChange((list) => [...list, { name: "Size", values: [] }])} className="admin-btn-ghost">
-            + ზომა
-          </button>
-        )}
-        <button type="button" onClick={() => onChange((list) => [...list, { name: "", values: [] }])} className="admin-btn-ghost">
-          + სხვა ატრიბუტი
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/** Gallery for one attribute value (e.g. all photos of the "Rose Gold" version) */
-function ValueGallery({ label, color, images, onChange }: { label: string; color?: string; images: string[]; onChange: (urls: string[]) => void }) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
 
   const upload = async (files: FileList) => {
     setBusy(true);
-    setError(null);
     const urls: string[] = [];
     for (const file of [...files]) {
       const fd = new FormData();
       fd.append("files", file);
       const res = await uploadImages(fd);
-      if (res.error) setError(res.error);
+      if (res.error) onError(res.error);
       urls.push(...res.urls);
     }
-    onChange([...images, ...urls]);
+    onChange({ images: [...v.images, ...urls] });
     setBusy(false);
   };
 
-  const move = (from: number, to: number) => {
-    if (to < 0 || to >= images.length) return;
-    const next = [...images];
+  const moveImage = (from: number, to: number) => {
+    if (to < 0 || to >= v.images.length) return;
+    const next = [...v.images];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
-    onChange(next);
+    onChange({ images: next });
   };
 
   return (
-    <div className="flex flex-wrap items-start gap-3">
-      <div className="flex w-32 shrink-0 items-center gap-2 pt-2 text-sm">
-        {color && <span className="size-4 rounded-full ring-1 ring-black/15" style={{ background: color }} />}
-        <span className="truncate font-medium">{label}</span>
+    <div className="rounded-xl border border-zinc-200 p-4">
+      <div className="flex items-center gap-2">
+        <span className="w-6 shrink-0 text-sm text-zinc-400">{index + 1}.</span>
+        <label
+          title="ფერი"
+          className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-full ring-1 ring-zinc-300"
+          style={
+            v.color
+              ? { background: v.color }
+              : { backgroundImage: "repeating-conic-gradient(#e4e4e7 0% 25%, #fff 0% 50%)", backgroundSize: "10px 10px" }
+          }
+        >
+          <input type="color" value={v.color || "#cccccc"} onChange={(e) => onChange({ color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" />
+        </label>
+        <input value={v.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="სახელი, მაგ. Rose Gold" required className="admin-input min-w-0 flex-1 !py-2.5 font-semibold" />
+        <button type="button" onClick={() => onMove(index - 1)} disabled={index === 0} className={iconBtn} aria-label="ზემოთ">
+          ↑
+        </button>
+        <button type="button" onClick={() => onMove(index + 1)} disabled={index === total - 1} className={iconBtn} aria-label="ქვემოთ">
+          ↓
+        </button>
+        <button type="button" onClick={onDuplicate} className={iconBtn} aria-label="დუბლირება" title="დუბლირება">
+          ⧉
+        </button>
+        <button type="button" onClick={onRemove} className={`${iconBtn} border-red-200 text-red-600 hover:bg-red-50`} aria-label="წაშლა" title="წაშლა">
+          ✕
+        </button>
       </div>
-      <div className="flex flex-1 flex-wrap gap-2">
-        {images.map((url, i) => (
-          <div key={url} className="group relative size-16 overflow-hidden rounded-md bg-zinc-100 ring-1 ring-zinc-200">
+      {v.color && (
+        <button type="button" onClick={() => onChange({ color: "" })} className="ml-[88px] mt-1 text-xs text-zinc-500 hover:underline">
+          ფერის მოხსნა
+        </button>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <label className="block text-xs text-zinc-600">
+          ფასი ($)
+          <input type="number" step="0.01" min="0" placeholder={productPrice || "პროდუქტის ფასი"} value={v.price} onChange={(e) => onChange({ price: e.target.value })} className="admin-input mt-1" />
+        </label>
+        <label className="block text-xs text-zinc-600">
+          ფასდაკლებით
+          <input type="number" step="0.01" min="0" placeholder="არა" value={v.salePrice} onChange={(e) => onChange({ salePrice: e.target.value })} className="admin-input mt-1" />
+        </label>
+        <label className="block text-xs text-zinc-600">
+          მარაგი (ც.)
+          <input type="number" min="0" placeholder="არ ითვლება" disabled={!v.inStock} value={v.stock} onChange={(e) => onChange({ stock: e.target.value })} className="admin-input mt-1 disabled:opacity-50" />
+        </label>
+        <label className="block text-xs text-zinc-600">
+          SKU / კოდი
+          <input value={v.sku} onChange={(e) => onChange({ sku: e.target.value })} className="admin-input mt-1" />
+        </label>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={v.inStock} onChange={(e) => onChange({ inStock: e.target.checked })} className="size-4" />
+          მარაგშია
+        </label>
+        {productImages.length > 0 && (
+          <button type="button" onClick={() => setPicking((x) => !x)} className="font-medium text-blue-700 hover:underline">
+            პროდუქტის ფოტოდან არჩევა
+          </button>
+        )}
+      </div>
+
+      {picking && (
+        <div className="mt-3 flex flex-wrap gap-2 rounded-lg bg-zinc-50 p-2 ring-1 ring-zinc-200">
+          {productImages.map((url) => {
+            const on = v.images.includes(url);
+            return (
+              <button
+                key={url}
+                type="button"
+                onClick={() => onChange({ images: on ? v.images.filter((u) => u !== url) : [...v.images, url] })}
+                className={`size-14 overflow-hidden rounded-md ring-2 ${on ? "ring-blue-600" : "ring-transparent"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="" className="size-full object-cover" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-3">
+        {v.images.map((url, i) => (
+          <div key={url} className="group relative size-20 overflow-hidden rounded-lg bg-zinc-100 ring-1 ring-zinc-200">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="size-full object-cover" />
-            {i === 0 && <span className="absolute left-0.5 top-0.5 rounded bg-zinc-900 px-1 text-[9px] text-white">მთავარი</span>}
+            {i === 0 && <span className="absolute left-1 top-1 rounded bg-zinc-900 px-1 text-[9px] text-white">მთავარი</span>}
             <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/55 text-xs text-white opacity-0 transition group-hover:opacity-100">
-              <button type="button" onClick={() => move(i, i - 1)} className="px-1" aria-label="მარცხნივ">
+              <button type="button" onClick={() => moveImage(i, i - 1)} className="px-1.5" aria-label="მარცხნივ">
                 ←
               </button>
-              <button type="button" onClick={() => onChange(images.filter((u) => u !== url))} className="px-1" aria-label="წაშლა">
+              <button type="button" onClick={() => onChange({ images: v.images.filter((u) => u !== url) })} className="px-1.5" aria-label="წაშლა">
                 ×
               </button>
-              <button type="button" onClick={() => move(i, i + 1)} className="px-1" aria-label="მარჯვნივ">
+              <button type="button" onClick={() => moveImage(i, i + 1)} className="px-1.5" aria-label="მარჯვნივ">
                 →
               </button>
             </div>
           </div>
         ))}
-        <label className="flex size-16 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-zinc-300 text-[10px] text-zinc-500 hover:border-zinc-500">
-          <span className="text-lg leading-none">+</span>
-          {busy ? "..." : "ფოტო"}
+        <label className="flex size-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 text-xs text-zinc-500 hover:border-zinc-500">
+          {busy ? "იტვირთება..." : "+ ფოტო"}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
@@ -580,120 +410,6 @@ function ValueGallery({ label, color, images, onChange }: { label: string; color
           />
         </label>
       </div>
-      {error && <p className="w-full text-xs text-red-600">{error}</p>}
-    </div>
-  );
-}
-
-/** Set price / sale / stock for all variations at once */
-function BulkFill({ onApply }: { onApply: (patch: Partial<Variation>) => void }) {
-  const [price, setPrice] = useState("");
-  const [salePrice, setSalePrice] = useState("");
-  const [stock, setStock] = useState("");
-  const apply = () => {
-    const patch: Partial<Variation> = {};
-    if (price) patch.price = price;
-    if (salePrice) patch.salePrice = salePrice;
-    if (stock) patch.stock = stock;
-    if (Object.keys(patch).length) onApply(patch);
-  };
-  return (
-    <div className="flex flex-wrap items-end gap-2 rounded-lg bg-zinc-50 p-3 text-xs ring-1 ring-zinc-200">
-      <span className="mb-2 w-full font-medium text-zinc-700 sm:mb-2.5 sm:w-auto">ყველასთვის ერთად:</span>
-      <label className="block">
-        ფასი
-        <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} className="admin-input mt-1 !w-24" />
-      </label>
-      <label className="block">
-        ფასდაკლება
-        <input type="number" step="0.01" min="0" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="admin-input mt-1 !w-24" />
-      </label>
-      <label className="block">
-        მარაგი
-        <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} className="admin-input mt-1 !w-20" />
-      </label>
-      <button type="button" onClick={apply} className="admin-btn-ghost">
-        გამოყენება
-      </button>
-    </div>
-  );
-}
-
-function VariationImage({
-  image,
-  gallery,
-  onPick,
-  onUpload,
-}: {
-  image: string | null;
-  gallery: string[];
-  onPick: (url: string | null) => void;
-  onUpload: (file: File) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <span className="block text-xs">ფოტო</span>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="mt-1 flex size-[52px] items-center justify-center overflow-hidden rounded-lg bg-zinc-100 text-lg text-zinc-400 ring-1 ring-zinc-200"
-      >
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={image} alt="" className="size-full object-cover" />
-        ) : (
-          "+"
-        )}
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 w-64 rounded-lg bg-white p-3 shadow-xl ring-1 ring-zinc-200">
-          <p className="mb-2 text-xs text-zinc-500">აირჩიეთ პროდუქტის ფოტოებიდან ან ატვირთეთ ახალი</p>
-          <div className="grid grid-cols-4 gap-1.5">
-            {gallery.map((url) => (
-              <button
-                key={url}
-                type="button"
-                onClick={() => {
-                  onPick(url);
-                  setOpen(false);
-                }}
-                className={`aspect-square overflow-hidden rounded ring-2 ${url === image ? "ring-zinc-900" : "ring-transparent"}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="size-full object-cover" />
-              </button>
-            ))}
-          </div>
-          <div className="mt-2 flex justify-between gap-2">
-            <label className="cursor-pointer text-xs text-zinc-700 hover:underline">
-              ატვირთვა
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) onUpload(f);
-                  setOpen(false);
-                }}
-              />
-            </label>
-            {image && (
-              <button
-                type="button"
-                onClick={() => {
-                  onPick(null);
-                  setOpen(false);
-                }}
-                className="text-xs text-red-600 hover:underline"
-              >
-                მოხსნა
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

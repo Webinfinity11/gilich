@@ -60,7 +60,13 @@ model ProductVariation {
   id        Int     @id @default(autoincrement())
   productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  /// JSON: { "Size": "6", "Color": "Gold" }
+  /// Shown on the site, e.g. "01 Bubble Gum" or "Rose Gold"
+  name      String  @default("")
+  /// Swatch colour (#rrggbb), optional
+  color     String?
+  /// JSON list of photo URLs; first is the main photo
+  images    String  @default("[]")
+  /// JSON: { "Color": "Gold" }
   options   String
   sku       String?
   price     Int

@@ -56,6 +56,19 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
 
 // ---------- Products ----------
 
+/** One variation as edited in the admin: empty price = product price */
+export type VariationInput = {
+  id?: number;
+  name: string;
+  color: string;
+  sku: string;
+  price: string;
+  salePrice: string;
+  stock: string;
+  inStock: boolean;
+  images: string[];
+};
+
 export type ProductInput = {
   id?: number;
   name: string;
@@ -73,16 +86,7 @@ export type ProductInput = {
   featured: boolean;
   categoryIds: number[];
   images: string[];
-  attributes: Attribute[];
-  variations: {
-    id?: number;
-    options: Record<string, string>;
-    sku: string;
-    price: string;
-    salePrice: string;
-    stock: string;
-    image: string | null;
-  }[];
+  variations: VariationInput[];
 };
 
 const intOrNull = (v: string) => (v.trim() === "" ? null : Math.max(0, Math.floor(Number(v)) || 0));
@@ -106,38 +110,46 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   const name = input.name.trim();
   if (!name) return { ok: false, message: "შეიყვანეთ პროდუქტის სახელი" };
 
-  const attributes: Attribute[] = input.attributes
-    .map((a) => {
-      const values = [...new Set(a.values.map((v) => v.trim()).filter(Boolean))];
-      // Per-value galleries: only string URLs, only for values that still exist
-      const gallery = Object.fromEntries(
-        values
-          .map((v) => [v, (Array.isArray(a.images?.[v]) ? a.images![v] : []).filter((u): u is string => typeof u === "string" && u.length > 0)] as const)
-          .filter(([, urls]) => urls.length),
-      );
-      const images = Object.keys(gallery).length ? { images: gallery } : {};
-      if (a.type !== "color") return { name: a.name.trim(), values, ...images };
-      const colors = Object.fromEntries(values.map((v) => [v, /^#[0-9a-f]{6}$/i.test(a.colors?.[v] ?? "") ? a.colors![v] : "#cccccc"]));
-      return { name: a.name.trim(), values, type: "color" as const, colors, ...images };
-    })
-    .filter((a) => a.name && a.values.length);
+  const price = toCents(input.price);
+  if (price === null) return { ok: false, message: "შეიყვანეთ პროდუქტის ფასი" };
+  const productSale = toCents(input.salePrice);
+  const urls = (list: unknown) => (Array.isArray(list) ? list.filter((u): u is string => typeof u === "string" && u.length > 0) : []);
 
-  const variations = input.variations.map((v, i) => ({
-    id: v.id,
-    options: JSON.stringify(v.options),
-    sku: v.sku.trim() || null,
-    price: toCents(v.price),
-    salePrice: toCents(v.salePrice),
-    stock: intOrNull(v.stock),
-    image: v.image || null,
-    sortOrder: i,
+  const cleaned = input.variations.map((v, i) => ({
+    ...v,
+    name: v.name.trim() || `#${i + 1}`,
+    color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : null,
+    images: urls(v.images),
   }));
-  if (variations.some((v) => v.price === null)) return { ok: false, message: "ყველა ვარიაციას უნდა ჰქონდეს ფასი" };
+  // Variations are stored as one attribute ("Color" when they have swatches) so shop filters and card dots keep working
+  const attrName = cleaned.some((v) => v.color) ? "Color" : "Variant";
+  const attributes: Attribute[] = cleaned.length
+    ? [
+        {
+          name: attrName,
+          values: [...new Set(cleaned.map((v) => v.name))],
+          ...(attrName === "Color" ? { type: "color" as const, colors: Object.fromEntries(cleaned.filter((v) => v.color).map((v) => [v.name, v.color!])) } : {}),
+        },
+      ]
+    : [];
 
-  // Simple products need a price; variable products use the lowest variation price as base
-  let price = toCents(input.price);
-  if (variations.length) price = Math.min(...variations.map((v) => v.price!));
-  if (price === null) return { ok: false, message: "შეიყვანეთ ფასი" };
+  const variations = cleaned.map((v, i) => {
+    const own = toCents(v.price);
+    return {
+      id: v.id,
+      name: v.name,
+      color: v.color,
+      images: JSON.stringify(v.images),
+      image: v.images[0] ?? null,
+      options: JSON.stringify({ [attrName]: v.name }),
+      sku: v.sku.trim() || null,
+      price: own ?? price,
+      // No own price: the product price and its sale apply
+      salePrice: toCents(v.salePrice) ?? (own === null ? productSale : null),
+      stock: v.inStock ? intOrNull(v.stock) : 0,
+      sortOrder: i,
+    };
+  });
 
   const slug = await uniqueSlug(input.slug.trim() || name, "product", input.id);
   const data = {
@@ -150,7 +162,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
     description: input.description.trim() || null,
     descriptionKa: input.descriptionKa.trim() || null,
     price,
-    salePrice: variations.length ? null : toCents(input.salePrice),
+    salePrice: productSale,
     stock: variations.length ? null : intOrNull(input.stock),
     status: input.status === "draft" ? "draft" : "published",
     featured: input.featured,
@@ -171,7 +183,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
     await tx.productVariation.deleteMany({ where: { productId: product.id, id: { notIn: keepIds } } });
     for (const v of variations) {
       const { id: vid, ...rest } = v;
-      const vdata = { ...rest, price: rest.price! };
+      const vdata = rest;
       if (vid) await tx.productVariation.update({ where: { id: vid }, data: vdata });
       else await tx.productVariation.create({ data: { ...vdata, productId: product.id } });
     }

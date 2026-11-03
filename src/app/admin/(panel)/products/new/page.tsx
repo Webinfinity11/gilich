@@ -32,7 +32,6 @@ export default async function NewProductPage() {
           featured: false,
           categoryIds: [],
           images: [],
-          attributes: [],
           variations: [],
         }}
       />

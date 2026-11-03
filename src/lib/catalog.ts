@@ -9,6 +9,9 @@ export type Attribute = { name: string; values: string[]; type?: "color"; colors
 
 export type Variation = {
   id: number;
+  name: string;
+  color: string | null;
+  images: string[];
   options: Record<string, string>;
   sku: string | null;
   price: number;
@@ -91,14 +94,24 @@ function primaryCategory(row: ProductRow, lang: Lang) {
   return c ? { name: pick(lang, c.name, c.nameKa), slug: c.slug } : null;
 }
 
+/** Variation label; older rows only have options ({ Color: "Gold", Size: "17" }) */
+export function variationName(v: { name: string; options: string }) {
+  return v.name || Object.values(parseJson<Record<string, string>>(v.options, {})).join(" / ");
+}
+
+function variationImages(v: { images: string; image: string | null }) {
+  const list = parseJson<string[]>(v.images, []);
+  return list.length ? list : v.image ? [v.image] : [];
+}
+
 function toCard(row: ProductRow, lang: Lang): ProductCard {
   const prices = row.variations.length ? row.variations.map(effectivePrice) : [effectivePrice(row)];
   const attributes = parseJson<Attribute[]>(row.attributes, []);
   // Variable products show the variation that the product page opens with (first in stock)
   const first = row.variations.find((v) => v.stock === null || v.stock > 0) ?? row.variations[0];
-  const firstOptions = first ? parseJson<Record<string, string>>(first.options, {}) : {};
-  const firstGallery = attributes.flatMap((a) => a.images?.[firstOptions[a.name]] ?? []);
-  const images = row.images.length ? row.images.map((i) => i.url) : firstGallery.length ? firstGallery : first?.image ? [first.image] : [];
+  // Card photos: the variation the product page opens with, else the product photos
+  const firstGallery = first ? variationImages(first) : [];
+  const images = firstGallery.length ? firstGallery : row.images.map((i) => i.url);
   return {
     id: row.id,
     name: pick(lang, row.name, row.nameKa),
@@ -126,6 +139,9 @@ function toDetail(row: ProductRow, lang: Lang): ProductDetail {
     description: pick(lang, row.description ?? "", row.descriptionKa) || null,
     variations: row.variations.map((v) => ({
       id: v.id,
+      name: variationName(v),
+      color: v.color,
+      images: variationImages(v),
       options: parseJson<Record<string, string>>(v.options, {}),
       sku: v.sku,
       price: v.price,

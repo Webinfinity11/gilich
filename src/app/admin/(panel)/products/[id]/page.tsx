@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { requireAdmin } from "@/lib/admin";
-import { parseJson } from "@/lib/catalog";
+import { parseJson, variationName } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { fromCents } from "@/lib/money";
 
@@ -48,16 +48,22 @@ export default async function EditProductPage({ params, searchParams }: PageProp
           featured: product.featured,
           categoryIds: product.categories.map((c) => c.id),
           images: product.images.map((i) => i.url),
-          attributes: parseJson(product.attributes, []),
-          variations: product.variations.map((v) => ({
-            id: v.id,
-            options: parseJson<Record<string, string>>(v.options, {}),
-            sku: v.sku ?? "",
-            price: fromCents(v.price),
-            salePrice: fromCents(v.salePrice),
-            stock: v.stock === null ? "" : String(v.stock),
-            image: v.image,
-          })),
+          variations: product.variations.map((v) => {
+            // Same price and sale as the product = "no own price" (empty field)
+            const inherits = v.price === product.price && v.salePrice === product.salePrice;
+            const images = parseJson<string[]>(v.images, []);
+            return {
+              id: v.id,
+              name: variationName(v),
+              color: v.color ?? "",
+              sku: v.sku ?? "",
+              price: inherits ? "" : fromCents(v.price),
+              salePrice: inherits ? "" : fromCents(v.salePrice),
+              stock: v.stock === null || v.stock === 0 ? "" : String(v.stock),
+              inStock: v.stock !== 0,
+              images: images.length ? images : v.image ? [v.image] : [],
+            };
+          }),
         }}
       />
     </div>

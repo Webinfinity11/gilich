@@ -40,26 +40,22 @@ const categoryNamesKa: Record<string, string> = {
 
 const mainOrder = ["rings", "necklaces", "bracelets", "earrings"];
 
-/** Colour × size demo: price grows with size, rose gold is on sale */
+/** Demo: three colours, each with its own price and photos */
 function demoVariations(images: string[]) {
-  const colors = { Gold: "#d4af37", "Rose Gold": "#b76e79", "White Gold": "#e8e6e1" };
-  const sizes = ["16", "17", "18"];
-  const create = Object.keys(colors).flatMap((color, ci) =>
-    sizes.map((size, si) => ({
-      options: JSON.stringify({ Color: color, Size: size }),
-      price: 10000 + si * 1500 + ci * 1000,
-      salePrice: color === "Rose Gold" ? 10000 + si * 1500 : null,
-      image: images[ci % Math.max(images.length, 1)] ?? null,
-      sortOrder: ci * sizes.length + si,
-    })),
-  );
+  const list = [
+    { name: "Gold", color: "#d4af37", price: 10000 },
+    { name: "Rose Gold", color: "#b76e79", price: 15000 },
+    { name: "White Gold", color: "#e8e6e1", price: 20000 },
+  ];
   return {
-    price: Math.min(...create.map((v) => v.salePrice ?? v.price)),
-    attributes: JSON.stringify([
-      { name: "Color", values: Object.keys(colors), type: "color", colors },
-      { name: "Size", values: sizes },
-    ]),
-    variations: { create },
+    price: 10000,
+    attributes: JSON.stringify([{ name: "Color", values: list.map((l) => l.name), type: "color", colors: Object.fromEntries(list.map((l) => [l.name, l.color])) }]),
+    variations: {
+      create: list.map((l, i) => {
+        const own = images.length ? [images[i % images.length], ...images.filter((_, j) => j !== i % images.length)] : [];
+        return { name: l.name, color: l.color, price: l.price, images: JSON.stringify(own), image: own[0] ?? null, options: JSON.stringify({ Color: l.name }), sortOrder: i };
+      }),
+    },
   };
 }
 
@@ -111,7 +107,7 @@ async function main() {
       },
     });
 
-    // Demo: ring-1 gets colour × size variations, each with its own price and photo
+    // Demo: ring-1 gets colour variations, each with its own price and photos
     if (p.slug === "ring-1") {
       await db.product.update({ where: { id: product.id }, data: demoVariations(p.images) });
     }
