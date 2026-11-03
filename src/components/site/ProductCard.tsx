@@ -27,7 +27,7 @@ export function PriceTag({ p, className = "" }: { p: Priced; className?: string 
 export function ProductCard({ product }: { product: Card }) {
   const [first, second] = product.images;
   return (
-    <div className="group relative h-full border border-line bg-white">
+    <div className="card-lift group relative h-full border border-line bg-white">
       <Link href={`/product/${product.slug}`} className="relative block aspect-[338/383] overflow-hidden bg-[#f6f6f6]">
         {first && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -48,7 +48,7 @@ export function ProductCard({ product }: { product: Card }) {
           />
         )}
       </Link>
-      <div className="absolute right-3 top-3 opacity-0 transition group-hover:opacity-100 max-lg:opacity-100">
+      <div className="absolute right-3 top-3 translate-x-2 opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-100 max-lg:translate-x-0 max-lg:opacity-100">
         <WishlistButton product={product} className="flex size-9 items-center justify-center rounded-full bg-white text-ink shadow" />
       </div>
       <div className="border-t border-line px-3 pb-4 pt-4 text-center">
@@ -58,7 +58,7 @@ export function ProductCard({ product }: { product: Card }) {
           </Link>
         )}
         <h3 className="mt-1.5 text-[15px] text-ink">
-          <Link href={`/product/${product.slug}`} className="hover:underline">
+          <Link href={`/product/${product.slug}`} className="link-draw">
             {product.name}
           </Link>
         </h3>

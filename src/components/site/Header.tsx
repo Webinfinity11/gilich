@@ -2,17 +2,18 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { localePath, stripLang } from "@/lib/i18n";
+import { stripLang } from "@/lib/i18n";
 import { formatPrice } from "@/lib/money";
 import { site } from "@/lib/site";
 import { CartIcon, CloseIcon, HeartIcon, MenuIcon } from "./icons";
 import { useI18n } from "./lang";
+import { LangSwitcher } from "./LangSwitcher";
 import { LLink } from "./LLink";
 import { useStore } from "./store";
 
 export function Header() {
   const pathname = usePathname();
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { cartCount, wishlist, cart, cartTotal, removeFromCart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -31,14 +32,6 @@ export function Header() {
     { href: "/shop", label: t.nav.shop },
     { href: "/contact-page", label: t.nav.contact },
   ];
-
-  // Same page in the other language
-  const switcher = (
-    <span className="flex items-center gap-3">
-      <LangFlag active={lang === "en"} href={localePath("en", current)} src="/media/ICON-1.png" label={t.lang.en} />
-      <LangFlag active={lang === "ka-ge"} href={localePath("ka-ge", current)} src="/media/flag-ge.svg" label={t.lang.ka} />
-    </span>
-  );
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
@@ -62,7 +55,7 @@ export function Header() {
               {item.label}
             </LLink>
           ))}
-          {switcher}
+          <LangSwitcher current={current} />
         </nav>
 
         <div className="flex items-center gap-5">
@@ -141,21 +134,13 @@ export function Header() {
             <LLink href="/cart" className="border-b border-line py-3 uppercase">
               {t.nav.cart}
             </LLink>
-            <div className="mt-6">{switcher}</div>
+            <div className="mt-6">
+              <LangSwitcher current={current} align="start" />
+            </div>
           </nav>
         </div>
       )}
     </header>
-  );
-}
-
-function LangFlag({ active, href, src, label }: { active: boolean; href: string; src: string; label: string }) {
-  return (
-    // Plain <a>: switching language swaps <html lang>, so it needs a full page load
-    <a href={href} hrefLang={href.startsWith("/ka-ge") ? "ka" : "en"} title={label} aria-label={label} aria-current={active ? "true" : undefined} className={active ? "" : "opacity-60 hover:opacity-100"}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className={`h-3 w-[18px] object-cover ${active ? "ring-1 ring-ink ring-offset-2" : ""}`} />
-    </a>
   );
 }
 

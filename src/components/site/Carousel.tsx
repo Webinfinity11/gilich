@@ -27,17 +27,17 @@ export function Carousel({
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>{header}</div>
         <div className="flex shrink-0 items-center gap-4">
-          <button type="button" aria-label="Previous" onClick={() => scroll(-1)} className="text-muted hover:text-ink">
+          <button type="button" aria-label="Previous" onClick={() => scroll(-1)} className="text-muted transition hover:-translate-x-1 hover:text-ink">
             <ArrowLeft className="size-6" />
           </button>
-          <button type="button" aria-label="Next" onClick={() => scroll(1)} className="text-ink hover:opacity-70">
+          <button type="button" aria-label="Next" onClick={() => scroll(1)} className="text-ink transition hover:translate-x-1 hover:opacity-70">
             <ArrowRight className="size-6" />
           </button>
         </div>
       </div>
-      <div ref={ref} className={`no-scrollbar flex snap-x snap-mandatory overflow-x-auto ${gapClass}`}>
+      <div ref={ref} className={`no-scrollbar -my-4 flex snap-x snap-mandatory overflow-x-auto py-4 ${gapClass}`}>
         {children.map((child, i) => (
-          <div key={i} className={`shrink-0 snap-start ${itemClassName}`}>
+          <div key={i} data-reveal="up" style={{ "--d": `${Math.min(i, 5) * 110}ms` } as React.CSSProperties} className={`shrink-0 snap-start ${itemClassName}`}>
             {child}
           </div>
         ))}

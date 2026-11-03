@@ -114,6 +114,152 @@ body {
   animation: fade-up 0.9s ease both;
 }
 
+/* ---------- Motion ---------- */
+:root {
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Scroll reveal — elements opt in with data-reveal="up|left|right|zoom|clip|fade" and optional style="--d: 200ms".
+   These are only the initial hidden states; RevealObserver animates them in with element.animate(). */
+.reveal-ready [data-reveal] {
+  opacity: 0;
+}
+.reveal-ready [data-reveal="up"] {
+  transform: translateY(40px);
+}
+.reveal-ready [data-reveal="left"] {
+  transform: translateX(-48px);
+}
+.reveal-ready [data-reveal="right"] {
+  transform: translateX(48px);
+}
+.reveal-ready [data-reveal="zoom"] {
+  transform: scale(0.94);
+}
+.reveal-ready [data-reveal="clip"] {
+  opacity: 1;
+  clip-path: inset(0 100% 0 0);
+}
+/* Image that settles from a slight zoom while its parent reveals */
+.reveal-ready [data-reveal] .reveal-img {
+  transform: scale(1.15);
+}
+
+/* Section-title sparkle: slow twinkle */
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(90deg) scale(0.8);
+  }
+}
+.sparkle {
+  animation: twinkle 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Gentle float (hero product images, icons) */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Hover lift for cards */
+.card-lift {
+  transition:
+    transform 0.5s var(--ease-out-soft),
+    box-shadow 0.5s var(--ease-out-soft),
+    border-color 0.3s;
+}
+.card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.25);
+  border-color: #cfcfcf;
+}
+
+/* Underline that draws in on hover */
+.link-draw {
+  background: linear-gradient(currentColor, currentColor) left bottom / 0% 1px no-repeat;
+  transition: background-size 0.4s var(--ease-out-soft);
+}
+.link-draw:hover,
+.group:hover .link-draw {
+  background-size: 100% 1px;
+}
+
+/* Arrow inside buttons nudges right on hover */
+.btn-dark svg,
+.btn-light svg {
+  transition: transform 0.3s var(--ease-out-soft);
+}
+.btn-dark:hover svg,
+.btn-light:hover svg {
+  transform: translateX(4px);
+}
+
+/* Light sweep across dark buttons */
+.btn-dark {
+  position: relative;
+  overflow: hidden;
+}
+.btn-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.18) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.8s var(--ease-out-soft);
+  pointer-events: none;
+}
+.btn-dark:hover::after {
+  transform: translateX(100%);
+}
+
+/* Hero slide-indicator progress */
+@keyframes progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.animate-progress {
+  transform-origin: left;
+  animation: progress linear both;
+}
+
+/* Staggered children for hero text */
+.stagger > * {
+  animation: fade-up 1s var(--ease-out-soft) both;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .prose-site p {
   margin-bottom: 1em;
 }

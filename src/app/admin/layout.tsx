@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ka" className="h-full antialiased">
-      <body className={`${georgian.className} min-h-full bg-zinc-100 text-zinc-900`}>{children}</body>
+      <body className={`${georgian.className} min-h-full bg-zinc-100 text-zinc-900`} suppressHydrationWarning>{children}</body>
     </html>
   );
 }

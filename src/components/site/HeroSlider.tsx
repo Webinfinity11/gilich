@@ -16,9 +16,9 @@ export function HeroSlider() {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => setIndex((i) => (i + 1) % images.length), 6000);
-    return () => clearInterval(t);
-  }, []);
+    const t = setTimeout(() => setIndex((i) => (i + 1) % images.length), 6000);
+    return () => clearTimeout(t);
+  }, [index]);
 
   return (
     <section className="relative h-[460px] overflow-hidden bg-black md:h-[600px] lg:h-[740px]" aria-roledescription="carousel">
@@ -37,7 +37,7 @@ export function HeroSlider() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
           <div className="container-site relative flex h-full flex-col justify-center text-white">
             {i === index && (
-              <div className="max-w-[560px] animate-fade-up">
+              <div className="stagger max-w-[560px]">
                 <p className="text-lg md:text-xl">{s.eyebrow}</p>
                 <h2 className="mt-3 text-[38px] leading-[1.1] md:text-[60px]">{s.title}</h2>
                 <Link href="/shop" className="btn-light mt-8">
@@ -55,8 +55,10 @@ export function HeroSlider() {
             type="button"
             aria-label={`Slide ${i + 1}`}
             onClick={() => setIndex(i)}
-            className={`h-[3px] w-10 transition ${i === index ? "bg-white" : "bg-white/40"}`}
-          />
+            className="relative h-[3px] w-10 overflow-hidden bg-white/40"
+          >
+            {i === index && <span key={index} className="animate-progress absolute inset-0 bg-white" style={{ animationDuration: "6000ms" }} />}
+          </button>
         ))}
       </div>
     </section>

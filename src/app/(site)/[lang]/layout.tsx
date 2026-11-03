@@ -8,6 +8,7 @@ import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { LangProvider } from "@/components/site/lang";
 import { NewsletterPopup } from "@/components/site/NewsletterPopup";
+import { RevealObserver } from "@/components/site/RevealObserver";
 import { StoreProvider } from "@/components/site/store";
 import { getDict, isLang, LANGS, localePath } from "@/lib/i18n";
 
@@ -35,7 +36,8 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[la
 
   return (
     <html lang={lang === "ka-ge" ? "ka" : "en"} className={`h-full antialiased ${georgian.variable}`}>
-      <body className="flex min-h-full flex-col">
+      {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) inject attributes on <body> before hydration */}
+      <body className="flex min-h-full flex-col" suppressHydrationWarning>
         <LangProvider lang={lang}>
           <StoreProvider>
             <Suspense fallback={<div className="h-[72px] border-b border-line md:h-[88px]" />}>
@@ -47,6 +49,7 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[la
             <Footer lang={lang} />
             <CartNotice />
             <NewsletterPopup />
+            <RevealObserver />
           </StoreProvider>
         </LangProvider>
       </body>
