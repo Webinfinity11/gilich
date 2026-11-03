@@ -8,6 +8,7 @@ import { useI18n } from "./lang";
 import { PriceTag } from "./ProductCard";
 import { useStore } from "./store";
 import { WishlistButton } from "./WishlistButton";
+import { ZoomImage } from "./ZoomImage";
 
 const featureIcons = ["/media/icon3-product-detail.png", "/media/icon2-product-detail.png", "/media/h1-icon4.png"];
 
@@ -88,12 +89,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
   return (
     <div className="grid gap-10 lg:grid-cols-2 lg:gap-[30px]">
       <div>
-        <div className="aspect-square overflow-hidden border border-line bg-[#f6f6f6]">
-          {mainImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={mainImage} alt={product.name} className="size-full object-cover" />
-          )}
-        </div>
+        {mainImage ? <ZoomImage src={mainImage} alt={product.name} /> : <div className="aspect-square border border-line bg-[#f6f6f6]" />}
         {gallery.length > 1 && (
           <div className="mt-4 flex flex-wrap gap-5">
             {gallery.map((src, i) => (
