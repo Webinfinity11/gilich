@@ -4,8 +4,8 @@ import { pick, type Lang } from "@/lib/i18n";
 
 export const CATALOG_TAG = "catalog";
 
-/** type "color" shows round swatches; colors maps value -> hex */
-export type Attribute = { name: string; values: string[]; type?: "color"; colors?: Record<string, string> };
+/** type "color" shows round swatches; colors maps value -> hex; images maps value -> its own gallery */
+export type Attribute = { name: string; values: string[]; type?: "color"; colors?: Record<string, string>; images?: Record<string, string[]> };
 
 export type Variation = {
   id: number;
@@ -93,21 +93,27 @@ function primaryCategory(row: ProductRow, lang: Lang) {
 
 function toCard(row: ProductRow, lang: Lang): ProductCard {
   const prices = row.variations.length ? row.variations.map(effectivePrice) : [effectivePrice(row)];
+  const attributes = parseJson<Attribute[]>(row.attributes, []);
+  // Variable products show the variation that the product page opens with (first in stock)
+  const first = row.variations.find((v) => v.stock === null || v.stock > 0) ?? row.variations[0];
+  const firstOptions = first ? parseJson<Record<string, string>>(first.options, {}) : {};
+  const firstGallery = attributes.flatMap((a) => a.images?.[firstOptions[a.name]] ?? []);
+  const images = row.images.length ? row.images.map((i) => i.url) : firstGallery.length ? firstGallery : first?.image ? [first.image] : [];
   return {
     id: row.id,
     name: pick(lang, row.name, row.nameKa),
     slug: row.slug,
-    price: row.price,
-    salePrice: row.salePrice,
+    price: first ? first.price : row.price,
+    salePrice: first ? first.salePrice : row.salePrice,
     minPrice: Math.min(...prices),
     maxPrice: Math.max(...prices),
-    images: row.images.map((i) => i.url),
+    images,
     category: primaryCategory(row, lang),
     categorySlugs: row.categories.map((c) => c.slug),
     createdAt: row.createdAt,
     featured: row.featured,
     hasVariations: row.variations.length > 0,
-    attributes: parseJson<Attribute[]>(row.attributes, []),
+    attributes,
   };
 }
 

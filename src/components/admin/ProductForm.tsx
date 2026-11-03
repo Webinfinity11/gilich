@@ -403,7 +403,7 @@ function AttributesEditor({
                       update(i, (x) =>
                         t === "color"
                           ? { ...x, type: "color", colors: Object.fromEntries(x.values.map((v) => [v, x.colors?.[v] ?? knownColors[v.toLowerCase()] ?? "#cccccc"])) }
-                          : { name: x.name, values: x.values },
+                          : { name: x.name, values: x.values, images: x.images },
                       )
                     }
                     className={`rounded-md px-2.5 py-1 ${(a.type ?? "button") === t ? "bg-white shadow-sm" : "text-zinc-600"}`}
@@ -439,9 +439,9 @@ function AttributesEditor({
                     onClick={() =>
                       update(i, (x) => {
                         const values = x.values.filter((y) => y !== v);
-                        if (x.type !== "color") return { ...x, values };
-                        const { [v]: _removed, ...colors } = x.colors ?? {};
-                        return { ...x, values, colors };
+                        const without = <T,>(map: Record<string, T> = {}) => Object.fromEntries(Object.entries(map).filter(([k]) => k !== v));
+                        if (x.type !== "color") return { ...x, values, images: without(x.images) };
+                        return { ...x, values, colors: without(x.colors), images: without(x.images) };
                       })
                     }
                     className="text-zinc-400 hover:text-red-600"
@@ -468,6 +468,26 @@ function AttributesEditor({
                 className="admin-input !w-48 !py-1.5"
               />
             </div>
+
+            {a.values.length > 0 && (
+              <details className="mt-3 rounded-lg bg-white p-3 ring-1 ring-zinc-200" open={Object.values(a.images ?? {}).some((l) => l.length > 0)}>
+                <summary className="cursor-pointer text-sm font-medium">
+                  ფოტოები თითოეული მნიშვნელობისთვის
+                  <span className="ml-1 font-normal text-zinc-500">(არჩევისას საიტზე შეიცვლება მთავარი ფოტო და გალერეა)</span>
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {a.values.map((v) => (
+                    <ValueGallery
+                      key={v}
+                      label={v}
+                      color={a.type === "color" ? a.colors?.[v] : undefined}
+                      images={a.images?.[v] ?? []}
+                      onChange={(urls) => update(i, (x) => ({ ...x, images: { ...x.images, [v]: urls } }))}
+                    />
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
         ))}
       </div>
@@ -487,6 +507,80 @@ function AttributesEditor({
           + სხვა ატრიბუტი
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Gallery for one attribute value (e.g. all photos of the "Rose Gold" version) */
+function ValueGallery({ label, color, images, onChange }: { label: string; color?: string; images: string[]; onChange: (urls: string[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const upload = async (files: FileList) => {
+    setBusy(true);
+    setError(null);
+    const urls: string[] = [];
+    for (const file of [...files]) {
+      const fd = new FormData();
+      fd.append("files", file);
+      const res = await uploadImages(fd);
+      if (res.error) setError(res.error);
+      urls.push(...res.urls);
+    }
+    onChange([...images, ...urls]);
+    setBusy(false);
+  };
+
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= images.length) return;
+    const next = [...images];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
+  };
+
+  return (
+    <div className="flex flex-wrap items-start gap-3">
+      <div className="flex w-32 shrink-0 items-center gap-2 pt-2 text-sm">
+        {color && <span className="size-4 rounded-full ring-1 ring-black/15" style={{ background: color }} />}
+        <span className="truncate font-medium">{label}</span>
+      </div>
+      <div className="flex flex-1 flex-wrap gap-2">
+        {images.map((url, i) => (
+          <div key={url} className="group relative size-16 overflow-hidden rounded-md bg-zinc-100 ring-1 ring-zinc-200">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" className="size-full object-cover" />
+            {i === 0 && <span className="absolute left-0.5 top-0.5 rounded bg-zinc-900 px-1 text-[9px] text-white">მთავარი</span>}
+            <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/55 text-xs text-white opacity-0 transition group-hover:opacity-100">
+              <button type="button" onClick={() => move(i, i - 1)} className="px-1" aria-label="მარცხნივ">
+                ←
+              </button>
+              <button type="button" onClick={() => onChange(images.filter((u) => u !== url))} className="px-1" aria-label="წაშლა">
+                ×
+              </button>
+              <button type="button" onClick={() => move(i, i + 1)} className="px-1" aria-label="მარჯვნივ">
+                →
+              </button>
+            </div>
+          </div>
+        ))}
+        <label className="flex size-16 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-zinc-300 text-[10px] text-zinc-500 hover:border-zinc-500">
+          <span className="text-lg leading-none">+</span>
+          {busy ? "..." : "ფოტო"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            multiple
+            hidden
+            disabled={busy}
+            onChange={(e) => {
+              if (e.target.files?.length) upload(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+      {error && <p className="w-full text-xs text-red-600">{error}</p>}
     </div>
   );
 }

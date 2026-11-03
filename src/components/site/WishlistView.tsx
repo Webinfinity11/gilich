@@ -36,7 +36,6 @@ export function WishlistView() {
               </Link>
               <span className="hidden sm:block">
                 {formatPrice(w.price)}
-                {w.maxPrice !== w.price && <> – {formatPrice(w.maxPrice)}</>}
               </span>
               <Link href={`/product/${w.slug}`} className="btn-dark !px-5 !py-3 !text-[13px]">
                 {t.common.viewProduct}

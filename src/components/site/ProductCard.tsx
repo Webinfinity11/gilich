@@ -5,15 +5,9 @@ import { WishlistButton } from "./WishlistButton";
 
 type Priced = Pick<Card, "minPrice" | "maxPrice" | "price" | "salePrice" | "hasVariations">;
 
+/** One price (no ranges): for variable products price/salePrice are those of the default variation */
 export function PriceTag({ p, className = "" }: { p: Priced; className?: string }) {
-  if (p.hasVariations && p.minPrice !== p.maxPrice) {
-    return (
-      <span className={className}>
-        {formatPrice(p.minPrice)} – {formatPrice(p.maxPrice)}
-      </span>
-    );
-  }
-  if (!p.hasVariations && p.salePrice !== null && p.salePrice < p.price) {
+  if (p.salePrice !== null && p.salePrice < p.price) {
     return (
       <span className={className}>
         <del className="mr-2 text-muted">{formatPrice(p.price)}</del>
@@ -21,7 +15,7 @@ export function PriceTag({ p, className = "" }: { p: Priced; className?: string 
       </span>
     );
   }
-  return <span className={className}>{formatPrice(p.minPrice)}</span>;
+  return <span className={className}>{formatPrice(p.price)}</span>;
 }
 
 export function ProductCard({ product }: { product: Card }) {

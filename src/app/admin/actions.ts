@@ -109,9 +109,16 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   const attributes: Attribute[] = input.attributes
     .map((a) => {
       const values = [...new Set(a.values.map((v) => v.trim()).filter(Boolean))];
-      if (a.type !== "color") return { name: a.name.trim(), values };
+      // Per-value galleries: only string URLs, only for values that still exist
+      const gallery = Object.fromEntries(
+        values
+          .map((v) => [v, (Array.isArray(a.images?.[v]) ? a.images![v] : []).filter((u): u is string => typeof u === "string" && u.length > 0)] as const)
+          .filter(([, urls]) => urls.length),
+      );
+      const images = Object.keys(gallery).length ? { images: gallery } : {};
+      if (a.type !== "color") return { name: a.name.trim(), values, ...images };
       const colors = Object.fromEntries(values.map((v) => [v, /^#[0-9a-f]{6}$/i.test(a.colors?.[v] ?? "") ? a.colors![v] : "#cccccc"]));
-      return { name: a.name.trim(), values, type: "color" as const, colors };
+      return { name: a.name.trim(), values, type: "color" as const, colors, ...images };
     })
     .filter((a) => a.name && a.values.length);
 

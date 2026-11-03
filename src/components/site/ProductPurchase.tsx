@@ -16,7 +16,12 @@ const featureIcons = ["/media/icon3-product-detail.png", "/media/icon2-product-d
 export function ProductPurchase({ product, children }: { product: ProductDetail; children: React.ReactNode }) {
   const { addToCart } = useStore();
   const { t } = useI18n();
-  const [selected, setSelected] = useState<Record<string, string>>({});
+  const inStock = (v: { stock: number | null }) => v.stock === null || v.stock > 0;
+  // The first available variation is picked on load, so a single price and its photos show right away
+  const [selected, setSelected] = useState<Record<string, string>>(() => {
+    const first = product.variations.find(inStock) ?? product.variations[0];
+    return first ? { ...first.options } : {};
+  });
   const [qty, setQty] = useState(1);
   const [imageIndex, setImageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -29,35 +34,35 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
     return product.variations.find((v) => attrs.every((a) => v.options[a.name] === selected[a.name])) ?? null;
   }, [hasVariations, attrs, selected, product.variations]);
 
-  // Variations that fit what is picked so far (e.g. only the colour) — photo and price follow them right away
-  const anySelected = attrs.some((a) => selected[a.name]);
-  const matching = useMemo(
-    () => product.variations.filter((v) => attrs.every((a) => !selected[a.name] || v.options[a.name] === selected[a.name])),
-    [product.variations, attrs, selected],
-  );
-  const previewImage = variation?.image ?? (anySelected ? matching.find((v) => v.image)?.image : undefined) ?? null;
-  const matchPrices = matching.map((v) => (v.salePrice !== null && v.salePrice < v.price ? v.salePrice : v.price));
-
-  // Variation photo goes first in the gallery when selected
+  // Photos follow the selection: galleries of the picked values (e.g. colour "Rose Gold"),
+  // otherwise the variation photo first, then the product photos
   const gallery = useMemo(() => {
+    const own = attrs.flatMap((a) => (selected[a.name] ? (a.images?.[selected[a.name]] ?? []) : []));
+    if (own.length) return [...new Set(own)];
     const imgs = [...product.images];
-    if (previewImage && !imgs.includes(previewImage)) imgs.unshift(previewImage);
+    if (variation?.image) return [variation.image, ...imgs.filter((u) => u !== variation.image)];
     return imgs;
-  }, [product.images, previewImage]);
-  const mainImage = previewImage ?? gallery[imageIndex] ?? gallery[0];
+  }, [attrs, selected, product.images, variation]);
+  const mainImage = gallery[imageIndex] ?? gallery[0];
   const attrLabel = (name: string) => (name.toLowerCase() === "color" ? t.shop.color : name.toLowerCase() === "size" ? t.shop.size : name);
 
-  const isAvailable = (name: string, value: string) =>
-    product.variations.some(
-      (v) => v.options[name] === value && (v.stock === null || v.stock > 0) && attrs.every((a) => a.name === name || !selected[a.name] || v.options[a.name] === selected[a.name]),
-    );
+  const isAvailable = (name: string, value: string) => product.variations.some((v) => v.options[name] === value && inStock(v));
 
   const stock = hasVariations ? variation?.stock ?? null : product.stock;
   const outOfStock = stock !== null && stock <= 0;
 
+  /** Pick a value; if that combination does not exist, switch to the closest variation that has it */
   const choose = (name: string, value: string) => {
     setError(null);
-    setSelected((prev) => (prev[name] === value ? { ...prev, [name]: "" } : { ...prev, [name]: value }));
+    setImageIndex(0);
+    setSelected((prev) => {
+      const next = { ...prev, [name]: value };
+      const exact = product.variations.find((v) => attrs.every((a) => v.options[a.name] === next[a.name]));
+      if (exact) return next;
+      const score = (v: (typeof product.variations)[number]) => attrs.filter((a) => v.options[a.name] === next[a.name]).length + (inStock(v) ? 0.5 : 0);
+      const best = product.variations.filter((v) => v.options[name] === value).sort((a, b) => score(b) - score(a))[0];
+      return best ? { ...best.options } : next;
+    });
   };
 
   const add = () => {
@@ -96,10 +101,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
               <button
                 key={src}
                 type="button"
-                onClick={() => {
-                  setImageIndex(i);
-                  if (previewImage && src !== previewImage) setSelected({});
-                }}
+                onClick={() => setImageIndex(i)}
                 className={`size-[97px] overflow-hidden border ${src === mainImage ? "border-ink" : "border-line"}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -121,12 +123,6 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
               </>
             ) : (
               formatPrice(variation.price)
-            )
-          ) : anySelected && matchPrices.length ? (
-            Math.min(...matchPrices) === Math.max(...matchPrices) ? (
-              formatPrice(matchPrices[0])
-            ) : (
-              `${formatPrice(Math.min(...matchPrices))} – ${formatPrice(Math.max(...matchPrices))}`
             )
           ) : (
             <PriceTag p={product} />
@@ -177,11 +173,6 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
               </div>
             </div>
           ))}
-          {attrs.some((a) => selected[a.name]) && (
-            <button type="button" onClick={() => setSelected({})} className="mb-5 text-sm text-muted underline">
-              {t.product.clear}
-            </button>
-          )}
 
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-4">
