@@ -48,7 +48,6 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
   const topLevel = categories.filter((c) => !c.parentId);
   const childrenOf = (id: number) => categories.filter((c) => c.parentId === id);
   const toggleCat = (id: number) => set("categoryIds", p.categoryIds.includes(id) ? p.categoryIds.filter((c) => c !== id) : [...p.categoryIds, id]);
-  const hasVariations = p.variations.length > 0;
 
   return (
     <form
@@ -133,7 +132,8 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="font-semibold">ფასი</h2>
+          <h2 className="font-semibold">მთავარი პროდუქტი</h2>
+          <p className="mt-1 text-sm text-zinc-500">საიტზე ჯერ მთავარი პროდუქტი ჩანს ამ ფასით და ზედა ფოტოებით. ვარიაციის არჩევისას ფასი და ფოტოები შეიცვლება.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-4">
             <label className="block text-sm font-medium">
               ფასი ($) *
@@ -143,8 +143,6 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
               ფასდაკლებით
               <input type="number" step="0.01" min="0" placeholder="არა" value={p.salePrice} onChange={(e) => set("salePrice", e.target.value)} className="admin-input mt-1" />
             </label>
-            {!hasVariations && (
-              <>
                 <label className="block text-sm font-medium">
                   მარაგი (ც.)
                   <input type="number" min="0" placeholder="არ ითვლება" value={p.stock} onChange={(e) => set("stock", e.target.value)} className="admin-input mt-1" />
@@ -153,15 +151,13 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
                   SKU / კოდი
                   <input value={p.sku} onChange={(e) => set("sku", e.target.value)} className="admin-input mt-1" />
                 </label>
-              </>
-            )}
           </div>
         </section>
 
         <section className="admin-card p-5">
           <h2 className="font-semibold">ფერები / ვარიაციები ({p.variations.length})</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            ცარიელი ფასი = პროდუქტის ფასი. ცარიელი მარაგი = არ ითვლება. თუ ვარიაციას ფოტო არ აქვს, პროდუქტის ფოტო ჩანს. პირველი ვარიაცია საიტზე ავტომატურად არჩეულია.
+            ცარიელი ფასი = პროდუქტის ფასი. ცარიელი მარაგი = არ ითვლება. თუ ვარიაციას ფოტო არ აქვს, პროდუქტის ფოტო ჩანს.
           </p>
 
           <div className="mt-4 space-y-4">

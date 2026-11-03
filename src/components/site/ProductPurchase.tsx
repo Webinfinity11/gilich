@@ -17,8 +17,9 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
   const { addToCart } = useStore();
   const { t } = useI18n();
   const inStock = (v: { stock: number | null }) => v.stock === null || v.stock > 0;
-  // The first available variation is picked on load, so a single price and its photos show right away
-  const [selectedId, setSelectedId] = useState<number | null>(() => (product.variations.find(inStock) ?? product.variations[0])?.id ?? null);
+
+  // Main product first; a variation applies only when the customer picks one
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [qty, setQty] = useState(1);
   const [imageIndex, setImageIndex] = useState(0);
 
@@ -30,11 +31,12 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
   const gallery = variation?.images.length ? variation.images : product.images;
   const mainImage = gallery[imageIndex] ?? gallery[0];
 
-  const stock = hasVariations ? (variation?.stock ?? null) : product.stock;
+  const stock = variation ? variation.stock : product.stock;
   const outOfStock = stock !== null && stock <= 0;
 
-  const choose = (id: number) => {
-    setSelectedId(id);
+  /** Clicking the picked variation again (or "clear") goes back to the main product */
+  const choose = (id: number | null) => {
+    setSelectedId((cur) => (cur === id ? null : id));
     setImageIndex(0);
   };
 
@@ -132,6 +134,11 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                   );
                 })}
               </div>
+              {variation && (
+                <button type="button" onClick={() => choose(null)} className="mt-3 inline-flex items-center gap-1 text-sm text-muted underline-offset-4 hover:text-ink hover:underline">
+                  <span aria-hidden>×</span> {t.product.clear}
+                </button>
+              )}
             </div>
           )}
 

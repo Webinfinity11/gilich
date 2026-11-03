@@ -88,9 +88,10 @@ export async function placeOrder(input: {
   for (const line of lines) {
     const product = products.find((p) => p.id === line.productId);
     if (!product) return { ok: false, message: m.unavailable };
-    if (product.variations.length) {
-      const v = product.variations.find((x) => x.id === line.variationId);
-      if (!v) return { ok: false, message: m.options(product.name) };
+    // No variation picked = the main product itself
+    const v = line.variationId ? product.variations.find((x) => x.id === line.variationId) : undefined;
+    if (line.variationId && !v) return { ok: false, message: m.options(product.name) };
+    if (v) {
       if (v.stock !== null && v.stock < line.qty) return { ok: false, message: m.stock(product.name) };
       items.push({
         productId: product.id,

@@ -163,7 +163,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
     descriptionKa: input.descriptionKa.trim() || null,
     price,
     salePrice: productSale,
-    stock: variations.length ? null : intOrNull(input.stock),
+    stock: intOrNull(input.stock),
     status: input.status === "draft" ? "draft" : "published",
     featured: input.featured,
     attributes: JSON.stringify(attributes),

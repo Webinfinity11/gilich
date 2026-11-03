@@ -107,17 +107,16 @@ function variationImages(v: { images: string; image: string | null }) {
 function toCard(row: ProductRow, lang: Lang): ProductCard {
   const prices = row.variations.length ? row.variations.map(effectivePrice) : [effectivePrice(row)];
   const attributes = parseJson<Attribute[]>(row.attributes, []);
-  // Variable products show the variation that the product page opens with (first in stock)
   const first = row.variations.find((v) => v.stock === null || v.stock > 0) ?? row.variations[0];
-  // Card photos: the variation the product page opens with, else the product photos
+  // Card shows the main product; a variation's photos only if the product has none
   const firstGallery = first ? variationImages(first) : [];
-  const images = firstGallery.length ? firstGallery : row.images.map((i) => i.url);
+  const images = row.images.length ? row.images.map((i) => i.url) : firstGallery;
   return {
     id: row.id,
     name: pick(lang, row.name, row.nameKa),
     slug: row.slug,
-    price: first ? first.price : row.price,
-    salePrice: first ? first.salePrice : row.salePrice,
+    price: row.price,
+    salePrice: row.salePrice,
     minPrice: Math.min(...prices),
     maxPrice: Math.max(...prices),
     images,
