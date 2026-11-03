@@ -53,29 +53,31 @@ export function HeroEditor({ initial }: { initial: HeroSlideInput[] }) {
               <p className="mt-1 text-xs text-zinc-500">რეკომენდებული: ჰორიზონტალური, მინ. 1920px სიგანე, მაქს. 4 MB</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block text-sm font-medium">
-                ზედა წარწერა (EN)
-                <input value={s.eyebrow} onChange={(e) => update(i, { eyebrow: e.target.value })} className="admin-input mt-1" />
-              </label>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">ქართული საიტი</p>
+              <p className="hidden text-xs font-semibold uppercase tracking-wide text-zinc-500 sm:block">ინგლისური საიტი</p>
               <label className="block text-sm font-medium">
                 ზედა წარწერა (ქართ.)
                 <input value={s.eyebrowKa} onChange={(e) => update(i, { eyebrowKa: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                სათაური (EN)
-                <textarea rows={2} value={s.title} onChange={(e) => update(i, { title: e.target.value })} className="admin-input mt-1" />
+                ზედა წარწერა (EN)
+                <input value={s.eyebrow} onChange={(e) => update(i, { eyebrow: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
                 სათაური (ქართ.)
                 <textarea rows={2} value={s.titleKa} onChange={(e) => update(i, { titleKa: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                ღილაკი (EN)
-                <input value={s.button} placeholder="Shop Now" onChange={(e) => update(i, { button: e.target.value })} className="admin-input mt-1" />
+                სათაური (EN)
+                <textarea rows={2} value={s.title} onChange={(e) => update(i, { title: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
                 ღილაკი (ქართ.)
                 <input value={s.buttonKa} placeholder="მაღაზია" onChange={(e) => update(i, { buttonKa: e.target.value })} className="admin-input mt-1" />
+              </label>
+              <label className="block text-sm font-medium">
+                ღილაკი (EN)
+                <input value={s.button} placeholder="Shop Now" onChange={(e) => update(i, { button: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium sm:col-span-2">
                 ღილაკის ბმული

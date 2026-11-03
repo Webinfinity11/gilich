@@ -35,11 +35,11 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
     </label>
   );
 
-  /** English + Georgian side by side */
+  /** Georgian (shown on /ka-ge) first, English (shown on /) second */
   const pair = (en: TextKey, ka: TextKey, label: string, opts: { rows?: number; hint?: string } = {}) => (
     <div className="grid gap-4 md:grid-cols-2">
-      {field(en, `${label} (EN)`, opts)}
-      {field(ka, `${label} (ქართ.)`, { ...opts, hint: opts.hint ?? "ცარიელი = ინგლისური ტექსტი" })}
+      {field(ka, `${label} — ქართული საიტი`, { ...opts, hint: opts.hint ?? "ცარიელი = ინგლისური ტექსტი" })}
+      {field(en, `${label} — ინგლისური საიტი`, opts)}
     </div>
   );
 
@@ -123,9 +123,9 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
               <div key={i} className="space-y-3 rounded-lg border border-zinc-200 p-4">
                 <p className="text-sm font-semibold">უპირატესობა {i + 1}</p>
                 <div className="grid gap-3 md:grid-cols-2">
-                  {(["title", "titleKa"] as const).map((k) => (
+                  {(["titleKa", "title"] as const).map((k) => (
                     <label key={k} className="block text-sm">
-                      {k === "title" ? "სათაური (EN)" : "სათაური (ქართ.)"}
+                      {k === "title" ? "სათაური — ინგლისური საიტი" : "სათაური — ქართული საიტი"}
                       <input
                         value={r[k]}
                         onChange={(e) => setS((prev) => ({ ...prev, reasons: prev.reasons.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)) }))}
@@ -133,9 +133,9 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
                       />
                     </label>
                   ))}
-                  {(["text", "textKa"] as const).map((k) => (
+                  {(["textKa", "text"] as const).map((k) => (
                     <label key={k} className="block text-sm">
-                      {k === "text" ? "ტექსტი (EN)" : "ტექსტი (ქართ.)"}
+                      {k === "text" ? "ტექსტი — ინგლისური საიტი" : "ტექსტი — ქართული საიტი"}
                       <textarea
                         rows={4}
                         value={r[k]}
