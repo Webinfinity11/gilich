@@ -40,6 +40,29 @@ const categoryNamesKa: Record<string, string> = {
 
 const mainOrder = ["rings", "necklaces", "bracelets", "earrings"];
 
+/** Colour × size demo: price grows with size, rose gold is on sale */
+function demoVariations(images: string[]) {
+  const colors = { Gold: "#d4af37", "Rose Gold": "#b76e79", "White Gold": "#e8e6e1" };
+  const sizes = ["16", "17", "18"];
+  const create = Object.keys(colors).flatMap((color, ci) =>
+    sizes.map((size, si) => ({
+      options: JSON.stringify({ Color: color, Size: size }),
+      price: 10000 + si * 1500 + ci * 1000,
+      salePrice: color === "Rose Gold" ? 10000 + si * 1500 : null,
+      image: images[ci % Math.max(images.length, 1)] ?? null,
+      sortOrder: ci * sizes.length + si,
+    })),
+  );
+  return {
+    price: Math.min(...create.map((v) => v.salePrice ?? v.price)),
+    attributes: JSON.stringify([
+      { name: "Color", values: Object.keys(colors), type: "color", colors },
+      { name: "Size", values: sizes },
+    ]),
+    variations: { create },
+  };
+}
+
 async function main() {
   if (!process.argv.includes("--force") && (await db.category.count()) > 0) {
     console.log("Database already has data, skipping seed (use --force to reset)");
@@ -88,21 +111,9 @@ async function main() {
       },
     });
 
-    // Demo: ring-1 gets size variations with their own price and photo
+    // Demo: ring-1 gets colour × size variations, each with its own price and photo
     if (p.slug === "ring-1") {
-      await db.product.update({
-        where: { id: product.id },
-        data: {
-          attributes: JSON.stringify([{ name: "Size", values: ["6", "7", "8"] }]),
-          variations: {
-            create: [
-              { options: JSON.stringify({ Size: "6" }), price: 10000, image: p.images[0], sortOrder: 0 },
-              { options: JSON.stringify({ Size: "7" }), price: 12000, image: p.images[1], sortOrder: 1 },
-              { options: JSON.stringify({ Size: "8" }), price: 14000, salePrice: 13000, image: p.images[0], sortOrder: 2 },
-            ],
-          },
-        },
-      });
+      await db.product.update({ where: { id: product.id }, data: demoVariations(p.images) });
     }
   }
   console.log(`Seeded ${data.categories.length} categories and ${data.products.length} products`);

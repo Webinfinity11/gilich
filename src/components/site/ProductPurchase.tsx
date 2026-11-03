@@ -28,13 +28,23 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
     return product.variations.find((v) => attrs.every((a) => v.options[a.name] === selected[a.name])) ?? null;
   }, [hasVariations, attrs, selected, product.variations]);
 
+  // Variations that fit what is picked so far (e.g. only the colour) — photo and price follow them right away
+  const anySelected = attrs.some((a) => selected[a.name]);
+  const matching = useMemo(
+    () => product.variations.filter((v) => attrs.every((a) => !selected[a.name] || v.options[a.name] === selected[a.name])),
+    [product.variations, attrs, selected],
+  );
+  const previewImage = variation?.image ?? (anySelected ? matching.find((v) => v.image)?.image : undefined) ?? null;
+  const matchPrices = matching.map((v) => (v.salePrice !== null && v.salePrice < v.price ? v.salePrice : v.price));
+
   // Variation photo goes first in the gallery when selected
   const gallery = useMemo(() => {
     const imgs = [...product.images];
-    if (variation?.image && !imgs.includes(variation.image)) imgs.unshift(variation.image);
+    if (previewImage && !imgs.includes(previewImage)) imgs.unshift(previewImage);
     return imgs;
-  }, [product.images, variation]);
-  const mainImage = variation?.image ?? gallery[imageIndex] ?? gallery[0];
+  }, [product.images, previewImage]);
+  const mainImage = previewImage ?? gallery[imageIndex] ?? gallery[0];
+  const attrLabel = (name: string) => (name.toLowerCase() === "color" ? t.shop.color : name.toLowerCase() === "size" ? t.shop.size : name);
 
   const isAvailable = (name: string, value: string) =>
     product.variations.some(
@@ -92,7 +102,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                 type="button"
                 onClick={() => {
                   setImageIndex(i);
-                  if (variation?.image && src !== variation.image) setSelected({});
+                  if (previewImage && src !== previewImage) setSelected({});
                 }}
                 className={`size-[97px] overflow-hidden border ${src === mainImage ? "border-ink" : "border-line"}`}
               >
@@ -116,6 +126,12 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
             ) : (
               formatPrice(variation.price)
             )
+          ) : anySelected && matchPrices.length ? (
+            Math.min(...matchPrices) === Math.max(...matchPrices) ? (
+              formatPrice(matchPrices[0])
+            ) : (
+              `${formatPrice(Math.min(...matchPrices))} – ${formatPrice(Math.max(...matchPrices))}`
+            )
           ) : (
             <PriceTag p={product} />
           )}
@@ -126,13 +142,30 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
           {attrs.map((a) => (
             <div key={a.name} className="mb-5">
               <p className="mb-2 text-sm uppercase text-ink">
-                {a.name}
+                {attrLabel(a.name)}
                 {selected[a.name] && <span className="ml-2 normal-case text-muted">{selected[a.name]}</span>}
               </p>
               <div className="flex flex-wrap gap-2">
                 {a.values.map((value) => {
                   const on = selected[a.name] === value;
                   const available = isAvailable(a.name, value);
+                  const hex = a.type === "color" ? a.colors?.[value] : undefined;
+                  if (hex)
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        title={value}
+                        aria-label={value}
+                        aria-pressed={on}
+                        disabled={!available}
+                        onClick={() => choose(a.name, value)}
+                        className={`relative flex size-10 items-center justify-center rounded-full border transition ${on ? "border-ink" : "border-transparent hover:border-line"} disabled:cursor-not-allowed disabled:opacity-35`}
+                      >
+                        <span className="size-8 rounded-full ring-1 ring-black/10" style={{ background: hex }} />
+                        {!available && <span className="absolute h-px w-9 rotate-45 bg-ink" />}
+                      </button>
+                    );
                   return (
                     <button
                       key={value}

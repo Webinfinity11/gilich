@@ -4,7 +4,8 @@ import { pick, type Lang } from "@/lib/i18n";
 
 export const CATALOG_TAG = "catalog";
 
-export type Attribute = { name: string; values: string[] };
+/** type "color" shows round swatches; colors maps value -> hex */
+export type Attribute = { name: string; values: string[]; type?: "color"; colors?: Record<string, string> };
 
 export type Variation = {
   id: number;
@@ -213,15 +214,18 @@ export async function getAttributeFilters(): Promise<Attribute[]> {
   cacheLife("max");
   cacheTag(CATALOG_TAG);
   const rows = await db.product.findMany({ where: { status: "published" }, select: { attributes: true } });
-  const map = new Map<string, Set<string>>();
+  const map = new Map<string, { values: Set<string>; colors: Record<string, string> }>();
   for (const r of rows) {
     for (const a of parseJson<Attribute[]>(r.attributes, [])) {
-      const set = map.get(a.name) ?? new Set<string>();
-      a.values.forEach((v) => set.add(v));
-      map.set(a.name, set);
+      const entry = map.get(a.name) ?? { values: new Set<string>(), colors: {} };
+      a.values.forEach((v) => entry.values.add(v));
+      if (a.type === "color") Object.assign(entry.colors, a.colors);
+      map.set(a.name, entry);
     }
   }
-  return [...map].map(([name, values]) => ({ name, values: [...values] }));
+  return [...map].map(([name, { values, colors }]) =>
+    Object.keys(colors).length ? { name, values: [...values], type: "color" as const, colors } : { name, values: [...values] },
+  );
 }
 
 export type SortKey = "default" | "latest" | "price" | "price-desc";

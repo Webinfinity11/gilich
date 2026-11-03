@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
   if (!type || name !== path.basename(name)) return new Response("Not found", { status: 404 });
 
   try {
-    const file = await readFile(path.join(uploadDir(), name));
+    const file = await readFile(path.join(/* turbopackIgnore: true */ uploadDir(), name));
     return new Response(file, {
       headers: { "Content-Type": type, "Cache-Control": "public, max-age=31536000, immutable" },
     });

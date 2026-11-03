@@ -14,7 +14,7 @@ const TYPES: Record<string, string> = {
 
 /** Directory for uploaded images. On Railway this is a volume (UPLOAD_DIR=/data/uploads). */
 export function uploadDir() {
-  return process.env.UPLOAD_DIR || path.join(process.cwd(), "public", "uploads");
+  return process.env.UPLOAD_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads");
 }
 
 /**
@@ -36,6 +36,6 @@ export async function saveImage(file: File): Promise<string> {
 
   const dir = uploadDir();
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
+  await writeFile(path.join(/* turbopackIgnore: true */ dir, name), Buffer.from(await file.arrayBuffer()));
   return `/uploads/${name}`;
 }

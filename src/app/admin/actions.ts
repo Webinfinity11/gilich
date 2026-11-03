@@ -5,7 +5,8 @@ import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createSessionToken, safeEqual, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
-import { CATALOG_TAG } from "@/lib/catalog";
+import { CATALOG_TAG, type Attribute } from "@/lib/catalog";
+import { CONTENT_TAG, type HeroSlideInput } from "@/lib/content";
 import { db } from "@/lib/db";
 import { toCents } from "@/lib/money";
 import { ORDER_STATUSES } from "@/lib/orders";
@@ -26,7 +27,7 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
   const valid = safeEqual(email, expectedEmail) && safeEqual(password, expectedPassword);
   if (!valid) {
     await new Promise((r) => setTimeout(r, 600)); // slow down guessing
-    return { ok: false, message: "ელფოსტა ან პაროლი არასწორია" };
+    return { ok: false, message: "მომხმარებელი ან პაროლი არასწორია" };
   }
   const store = await cookies();
   store.set(SESSION_COOKIE, await createSessionToken(email), sessionCookieOptions);
@@ -72,7 +73,7 @@ export type ProductInput = {
   featured: boolean;
   categoryIds: number[];
   images: string[];
-  attributes: { name: string; values: string[] }[];
+  attributes: Attribute[];
   variations: {
     id?: number;
     options: Record<string, string>;
@@ -105,8 +106,13 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   const name = input.name.trim();
   if (!name) return { ok: false, message: "შეიყვანეთ პროდუქტის სახელი" };
 
-  const attributes = input.attributes
-    .map((a) => ({ name: a.name.trim(), values: [...new Set(a.values.map((v) => v.trim()).filter(Boolean))] }))
+  const attributes: Attribute[] = input.attributes
+    .map((a) => {
+      const values = [...new Set(a.values.map((v) => v.trim()).filter(Boolean))];
+      if (a.type !== "color") return { name: a.name.trim(), values };
+      const colors = Object.fromEntries(values.map((v) => [v, /^#[0-9a-f]{6}$/i.test(a.colors?.[v] ?? "") ? a.colors![v] : "#cccccc"]));
+      return { name: a.name.trim(), values, type: "color" as const, colors };
+    })
     .filter((a) => a.name && a.values.length);
 
   const variations = input.variations.map((v, i) => ({
@@ -287,4 +293,28 @@ export async function deleteSubscriber(id: number) {
   await requireAdmin();
   await db.subscriber.delete({ where: { id } });
   refresh();
+}
+
+// ---------- Home page content ----------
+
+export async function saveHero(slides: HeroSlideInput[]): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const clean = slides
+    .map((s) => ({
+      image: text(s.image),
+      eyebrow: text(s.eyebrow),
+      eyebrowKa: text(s.eyebrowKa),
+      title: text(s.title),
+      titleKa: text(s.titleKa),
+      button: text(s.button),
+      buttonKa: text(s.buttonKa),
+      link: text(s.link) || "/shop",
+    }))
+    .filter((s) => s.image);
+  if (!clean.length) return { ok: false, message: "დაამატეთ მინიმუმ ერთი სლაიდი ფოტოთი" };
+  const value = JSON.stringify(clean);
+  await db.setting.upsert({ where: { key: "hero" }, create: { key: "hero", value }, update: { value } });
+  updateTag(CONTENT_TAG);
+  return { ok: true, message: "შენახულია, ცვლილება საიტზე უკვე ჩანს" };
 }

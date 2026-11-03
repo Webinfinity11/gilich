@@ -6,7 +6,8 @@ import { useState } from "react";
 import { logout } from "@/app/admin/actions";
 
 const nav = [
-  { href: "/admin", label: "მთავარი", icon: "M3 12l9-8 9 8M5 10v10h14V10" },
+  { href: "/admin", label: "დაფა", icon: "M3 12l9-8 9 8M5 10v10h14V10" },
+  { href: "/admin/home", label: "მთავარი გვერდი", icon: "M4 5h16v14H4zM4 15l5-5 4 4 3-3 4 4" },
   { href: "/admin/orders", label: "შეკვეთები", icon: "M6 3h12l1 4H5l1-4zM5 7h14v13H5zM9 11h6" },
   { href: "/admin/products", label: "პროდუქცია", icon: "M12 3 3 7.5 12 12l9-4.5L12 3zM3 7.5V17l9 4.5 9-4.5V7.5" },
   { href: "/admin/categories", label: "კატეგორიები", icon: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" },

@@ -81,22 +81,14 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/product
           </div>
         </ProductPurchase>
 
-        <div className="mt-16">
-          <div className="flex gap-8 border-b border-line">
-            <span className="-mb-px border-b-2 border-ink pb-2 text-lg uppercase text-ink">{product.description ? t.product.description : t.product.reviews}</span>
-          </div>
-          {product.description ? (
-            <div className="prose-site mt-6 max-w-none whitespace-pre-line text-[15px] leading-relaxed text-muted">{product.description}</div>
-          ) : (
-            <div className="mt-6">
-              <p className="text-muted">
-                <span className="tracking-[3px] text-[#d0d0d0]">★★★★★</span> {t.product.customerReviews}
-              </p>
-              <p className="mt-6 text-ink">{t.product.reviewsTitle}</p>
-              <p className="mt-2 text-muted">{t.product.noReviews}</p>
+        {product.description && (
+          <div className="mt-16">
+            <div className="flex gap-8 border-b border-line">
+              <span className="-mb-px border-b-2 border-ink pb-2 text-lg uppercase text-ink">{t.product.description}</span>
             </div>
-          )}
-        </div>
+            <div className="prose-site mt-6 max-w-none whitespace-pre-line text-[15px] leading-relaxed text-muted">{product.description}</div>
+          </div>
+        )}
       </section>
 
       {related.length > 0 && (

@@ -26,6 +26,7 @@ export function PriceTag({ p, className = "" }: { p: Priced; className?: string 
 
 export function ProductCard({ product }: { product: Card }) {
   const [first, second] = product.images;
+  const colorAttr = product.attributes.find((a) => a.type === "color" && a.values.length > 1);
   return (
     <div className="card-lift group relative h-full border border-line bg-white">
       <Link href={`/product/${product.slug}`} className="relative block aspect-[338/383] overflow-hidden bg-[#f6f6f6]">
@@ -63,6 +64,13 @@ export function ProductCard({ product }: { product: Card }) {
           </Link>
         </h3>
         <PriceTag p={product} className="mt-1 block text-lg text-ink" />
+        {colorAttr && (
+          <div className="mt-2 flex justify-center gap-1.5">
+            {colorAttr.values.slice(0, 6).map((v) => (
+              <span key={v} title={v} className="size-3.5 rounded-full ring-1 ring-black/15" style={{ background: colorAttr.colors?.[v] }} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

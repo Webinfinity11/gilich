@@ -121,3 +121,10 @@ model Subscriber {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+/// Editable site content (home hero etc.), value is JSON
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

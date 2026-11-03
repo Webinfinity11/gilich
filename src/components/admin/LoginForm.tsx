@@ -12,8 +12,8 @@ export function LoginForm({ searchParams }: { searchParams: Promise<Record<strin
     <form action={action} className="mt-6 space-y-4">
       <input type="hidden" name="next" value={next} />
       <label className="block text-sm">
-        ელფოსტა
-        <input name="email" type="email" required autoComplete="username" className="admin-input mt-1" />
+        მომხმარებელი
+        <input name="email" type="text" required autoCapitalize="none" autoComplete="username" className="admin-input mt-1" />
       </label>
       <label className="block text-sm">
         პაროლი

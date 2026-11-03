@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { ProductTabs } from "@/components/site/ProductTabs";
 import { SectionTitle } from "@/components/site/SectionTitle";
 import { getBestSellers, getCategories, getProducts, sortProducts } from "@/lib/catalog";
+import { getHero } from "@/lib/content";
 import { getDict, type Lang } from "@/lib/i18n";
 import { site } from "@/lib/site";
 
@@ -34,7 +35,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   const { lang: raw } = await params;
   const lang = raw as Lang;
   const t = getDict(lang);
-  const [products, categories, bestSellers] = await Promise.all([getProducts(lang), getCategories(lang), getBestSellers(lang)]);
+  const [products, categories, bestSellers, hero] = await Promise.all([getProducts(lang), getCategories(lang), getBestSellers(lang), getHero(lang)]);
   const h = t.home;
   const catName = (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug;
   const homeCategories = homeCategorySlugs.map((s) => categories.find((c) => c.slug === s)).filter((c) => !!c);
@@ -44,7 +45,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
 
   return (
     <>
-      <HeroSlider />
+      <HeroSlider slides={hero} />
 
       {/* Categories */}
       <section className="container-site pt-16 md:pt-[90px]">

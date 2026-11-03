@@ -97,16 +97,29 @@ export function ShopView({
             <h3 className="mb-5 text-xl uppercase text-ink">{name === "Color" ? t.shop.color : t.shop.size}</h3>
             {attr && (
               <div className="flex flex-wrap gap-2">
-                {attr.values.map((v) => (
-                  <Link
-                    key={v}
-                    href={toggle(`filter_${attr.name}`, current, v)}
-                    scroll={false}
-                    className={`min-w-10 border px-3 py-1.5 text-center text-sm ${current.includes(v) ? "border-ink bg-ink text-white" : "border-line text-ink hover:border-ink"}`}
-                  >
-                    {v}
-                  </Link>
-                ))}
+                {attr.values.map((v) =>
+                  attr.colors?.[v] ? (
+                    <Link
+                      key={v}
+                      href={toggle(`filter_${attr.name}`, current, v)}
+                      scroll={false}
+                      title={v}
+                      aria-label={v}
+                      className={`flex size-9 items-center justify-center rounded-full border ${current.includes(v) ? "border-ink" : "border-transparent hover:border-line"}`}
+                    >
+                      <span className="size-7 rounded-full ring-1 ring-black/10" style={{ background: attr.colors[v] }} />
+                    </Link>
+                  ) : (
+                    <Link
+                      key={v}
+                      href={toggle(`filter_${attr.name}`, current, v)}
+                      scroll={false}
+                      className={`min-w-10 border px-3 py-1.5 text-center text-sm ${current.includes(v) ? "border-ink bg-ink text-white" : "border-line text-ink hover:border-ink"}`}
+                    >
+                      {v}
+                    </Link>
+                  ),
+                )}
               </div>
             )}
           </div>
