@@ -21,10 +21,10 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
           ? {
               OR: [
                 ...(Number.isInteger(asNumber) && asNumber > 0 ? [{ id: asNumber }] : []),
-                { firstName: { contains: q } },
-                { lastName: { contains: q } },
-                { phone: { contains: q } },
-                { email: { contains: q } },
+                { firstName: { contains: q, mode: "insensitive" } },
+                { lastName: { contains: q, mode: "insensitive" } },
+                { phone: { contains: q, mode: "insensitive" } },
+                { email: { contains: q, mode: "insensitive" } },
               ],
             }
           : {}),

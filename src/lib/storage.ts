@@ -12,9 +12,14 @@ const TYPES: Record<string, string> = {
   "image/avif": "avif",
 };
 
+/** Directory for uploaded images. On Railway this is a volume (UPLOAD_DIR=/data/uploads). */
+export function uploadDir() {
+  return process.env.UPLOAD_DIR || path.join(process.cwd(), "public", "uploads");
+}
+
 /**
- * Saves an uploaded image and returns its public URL.
- * Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set, otherwise public/uploads (local dev only).
+ * Saves an uploaded image and returns its public URL (/uploads/<name>).
+ * Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set, otherwise UPLOAD_DIR.
  */
 export async function saveImage(file: File): Promise<string> {
   const ext = TYPES[file.type];
@@ -29,7 +34,7 @@ export async function saveImage(file: File): Promise<string> {
     return blob.url;
   }
 
-  const dir = path.join(process.cwd(), "public", "uploads");
+  const dir = uploadDir();
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
   return `/uploads/${name}`;

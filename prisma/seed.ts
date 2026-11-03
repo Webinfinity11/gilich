@@ -1,9 +1,9 @@
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import data from "./seed-data.json";
 
-const db = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! }) });
+const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
 
 // Category card images used on the original home page
 const categoryImages: Record<string, string> = {
@@ -41,6 +41,10 @@ const categoryNamesKa: Record<string, string> = {
 const mainOrder = ["rings", "necklaces", "bracelets", "earrings"];
 
 async function main() {
+  if (!process.argv.includes("--force") && (await db.category.count()) > 0) {
+    console.log("Database already has data, skipping seed (use --force to reset)");
+    return;
+  }
   await db.orderItem.deleteMany();
   await db.order.deleteMany();
   await db.productVariation.deleteMany();

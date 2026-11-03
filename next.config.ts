@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["pg"],
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
   },
