@@ -1,11 +1,11 @@
 import { getDict, type Lang } from "@/lib/i18n";
-import { site } from "@/lib/site";
+import type { SiteInfo } from "@/lib/settings";
 import { FacebookIcon, InstagramIcon, MailIcon, PhoneIcon, PinIcon, StarSparkle } from "./icons";
 import { LLink } from "./LLink";
 
 const collections = ["necklaces", "rings", "bracelets", "earrings"] as const;
 
-export function Footer({ lang }: { lang: Lang }) {
+export function Footer({ lang, info }: { lang: Lang; info: SiteInfo }) {
   const t = getDict(lang);
   const menu = [
     { href: "/", label: t.nav.home },
@@ -30,30 +30,30 @@ export function Footer({ lang }: { lang: Lang }) {
           <div className="grid gap-10 border border-white/70 px-6 py-12 md:grid-cols-[1.6fr_1fr_1fr] md:px-[72px]">
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={site.logoWhite} alt={site.fullName} className="h-[58px] w-auto" />
+              <img src={info.logoWhite} alt="Gilich Jewelry House" className="h-[58px] w-auto" />
               <ul className="mt-8 space-y-3 text-[15px] text-white/90">
                 <li className="flex items-center gap-3">
                   <PinIcon className="size-4 shrink-0" />
-                  {t.footer.address}
+                  {info.address}
                 </li>
                 <li>
-                  <a href={site.phoneHref} className="flex items-center gap-3 hover:underline">
+                  <a href={info.phoneHref} className="flex items-center gap-3 hover:underline">
                     <PhoneIcon className="size-4 shrink-0" />
-                    {site.phone}
+                    {info.phone}
                   </a>
                 </li>
                 <li>
-                  <a href={`mailto:${site.email}`} className="flex items-center gap-3 break-all hover:underline">
+                  <a href={`mailto:${info.email}`} className="flex items-center gap-3 break-all hover:underline">
                     <MailIcon className="size-4 shrink-0" />
-                    {site.email}
+                    {info.email}
                   </a>
                 </li>
               </ul>
               <div className="mt-8 flex gap-4">
-                <a href={site.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="hover:opacity-70">
+                <a href={info.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="hover:opacity-70">
                   <FacebookIcon className="size-5" />
                 </a>
-                <a href={site.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:opacity-70">
+                <a href={info.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:opacity-70">
                   <InstagramIcon className="size-5" />
                 </a>
               </div>
@@ -64,9 +64,9 @@ export function Footer({ lang }: { lang: Lang }) {
         </div>
       </div>
       <div className="container-site flex flex-col items-center justify-between gap-4 py-5 text-sm text-ink md:flex-row">
-        <p>GILICH Jewelry House ©2026 | {t.footer.rights}</p>
+        <p>{info.footerText}</p>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={site.paymentIcons} alt="Visa, Mastercard, Amex, Apple Pay" className="h-[22px] w-auto" />
+        <img src="/media/footer-home1.png" alt="Visa, Mastercard, Amex, Apple Pay" className="h-[22px] w-auto" />
       </div>
     </footer>
   );

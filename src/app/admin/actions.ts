@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createSessionToken, safeEqual, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
 import { CATALOG_TAG, type Attribute } from "@/lib/catalog";
 import { CONTENT_TAG, type HeroSlideInput } from "@/lib/content";
+import { defaultSettings, type SiteSettingsInput } from "@/lib/settings";
 import { db } from "@/lib/db";
 import { toCents } from "@/lib/money";
 import { ORDER_STATUSES } from "@/lib/orders";
@@ -334,6 +335,25 @@ export async function saveHero(slides: HeroSlideInput[]): Promise<{ ok: boolean;
   if (!clean.length) return { ok: false, message: "დაამატეთ მინიმუმ ერთი სლაიდი ფოტოთი" };
   const value = JSON.stringify(clean);
   await db.setting.upsert({ where: { key: "hero" }, create: { key: "hero", value }, update: { value } });
+  updateTag(CONTENT_TAG);
+  return { ok: true, message: "შენახულია, ცვლილება საიტზე უკვე ჩანს" };
+}
+
+export async function saveSettings(input: SiteSettingsInput): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const clean: SiteSettingsInput = {
+    ...Object.fromEntries(Object.keys(defaultSettings).filter((k) => k !== "reasons").map((k) => [k, text(input[k as keyof SiteSettingsInput])])),
+    reasons: (Array.isArray(input.reasons) ? input.reasons : []).map((r) => ({
+      title: text(r.title),
+      titleKa: text(r.titleKa),
+      text: text(r.text),
+      textKa: text(r.textKa),
+    })),
+  } as SiteSettingsInput;
+  if (!clean.phone || !clean.email) return { ok: false, message: "ტელეფონი და ელფოსტა სავალდებულოა" };
+  const value = JSON.stringify(clean);
+  await db.setting.upsert({ where: { key: "site" }, create: { key: "site", value }, update: { value } });
   updateTag(CONTENT_TAG);
   return { ok: true, message: "შენახულია, ცვლილება საიტზე უკვე ჩანს" };
 }

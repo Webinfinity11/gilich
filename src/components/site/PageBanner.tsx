@@ -1,14 +1,15 @@
 "use client";
 
-import { site } from "@/lib/site";
 import { ChevronRight } from "./icons";
 import { useI18n } from "./lang";
 import { LLink } from "./LLink";
+import { useSiteInfo } from "./SiteInfo";
 
 export function PageBanner({ title, crumbs }: { title: string; crumbs: { label: string; href?: string }[] }) {
   const { t } = useI18n();
+  const info = useSiteInfo();
   return (
-    <section className="bg-[#f3f3f3] bg-cover bg-left" style={{ backgroundImage: `url(${site.pageBanner})` }}>
+    <section className="bg-[#f3f3f3] bg-cover bg-left" style={{ backgroundImage: `url(${info.pageBanner})` }}>
       <div className="container-site py-16 md:py-[88px]">
         <h1 className="text-[40px] font-medium uppercase leading-none text-ink md:text-[60px]">{title}</h1>
         <nav className="mt-6 flex flex-wrap items-center gap-2 text-sm uppercase text-ink">

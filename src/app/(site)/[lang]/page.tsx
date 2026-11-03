@@ -8,8 +8,8 @@ import { ProductTabs } from "@/components/site/ProductTabs";
 import { SectionTitle } from "@/components/site/SectionTitle";
 import { getBestSellers, getCategories, getProducts, sortProducts } from "@/lib/catalog";
 import { getHero } from "@/lib/content";
+import { getSiteInfo } from "@/lib/settings";
 import { getDict, type Lang } from "@/lib/i18n";
-import { site } from "@/lib/site";
 
 const homeCategorySlugs = ["rings", "necklaces", "bracelets", "earrings"];
 
@@ -36,6 +36,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   const lang = raw as Lang;
   const t = getDict(lang);
   const [products, categories, bestSellers, hero] = await Promise.all([getProducts(lang), getCategories(lang), getBestSellers(lang), getHero(lang)]);
+  const info = await getSiteInfo(lang);
   const h = t.home;
   const catName = (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug;
   const homeCategories = homeCategorySlugs.map((s) => categories.find((c) => c.slug === s)).filter((c) => !!c);
@@ -87,12 +88,12 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
           <img src="/media/615269630_17935383756118951_7701057904552410564_n.webp" alt="" className="reveal-img h-[320px] w-full object-cover md:h-[520px]" />
         </div>
         <div data-reveal="right" style={{ "--d": "250ms" } as React.CSSProperties} className="flex flex-col justify-center bg-panel px-6 py-12 md:px-[30px] lg:pr-[10%]">
-          <h2 className="text-[30px] text-ink md:text-[34px]">{h.aboutTitle}</h2>
-          <p className="mt-6 text-[15px] leading-relaxed text-muted">
-            {h.aboutText[0]}
-            <br />
-            {h.aboutText[1]}
-          </p>
+          <h2 className="text-[30px] text-ink md:text-[34px]">{info.aboutTitle}</h2>
+          <div className="mt-6 space-y-3 text-[15px] leading-relaxed text-muted">
+            {info.aboutParagraphs.slice(0, 2).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
           <Link href="/about-page" className="btn-dark mt-8 self-start">
             {t.common.readMore} <ArrowRight className="size-4" />
           </Link>
@@ -220,18 +221,18 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
         <div className="container-site">
           <Carousel
             header={
-              <a href={site.instagram} target="_blank" rel="noreferrer">
+              <a href={info.instagram} target="_blank" rel="noreferrer">
                 <SectionTitle>{h.instagram}</SectionTitle>
               </a>
             }
             itemClassName="basis-[75%] sm:basis-[calc((100%-24px)/2)] lg:basis-[calc((100%-48px)/3)]"
           >
             {instagram.map((src, i) => (
-              <a key={src} href={site.instagram} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden ${i % 2 === 1 ? "lg:mt-14" : ""}`}>
+              <a key={src} href={info.instagram} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden ${i % 2 === 1 ? "lg:mt-14" : ""}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="aspect-square w-full object-cover transition duration-[1200ms] ease-out group-hover:scale-110" />
                 <span className="absolute inset-0 flex translate-y-3 items-center justify-center bg-black/40 text-white opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                  {site.instagramHandle}
+                  {info.instagramHandle}
                 </span>
               </a>
             ))}

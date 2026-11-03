@@ -4,16 +4,17 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { stripLang } from "@/lib/i18n";
 import { formatPrice } from "@/lib/money";
-import { site } from "@/lib/site";
 import { CartIcon, CloseIcon, HeartIcon, MenuIcon } from "./icons";
 import { useI18n } from "./lang";
 import { LangSwitcher } from "./LangSwitcher";
 import { LLink } from "./LLink";
+import { useSiteInfo } from "./SiteInfo";
 import { useStore } from "./store";
 
 export function Header() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const info = useSiteInfo();
   const { cartCount, wishlist, cart, cartTotal, removeFromCart } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -35,14 +36,15 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
+      {info.announcement && <p className="bg-ink px-4 py-2 text-center text-xs tracking-wide text-white md:text-sm">{info.announcement}</p>}
       <div className="container-site flex h-[72px] items-center justify-between gap-6 md:h-[88px]">
         <button type="button" className="lg:hidden" aria-label={t.header.openMenu} onClick={() => setMenuOpen(true)}>
           <MenuIcon className="size-7" />
         </button>
 
-        <LLink href="/" className="shrink-0" aria-label={site.fullName}>
+        <LLink href="/" className="shrink-0" aria-label="Gilich Jewelry House">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={site.logo} alt={site.fullName} className="h-[46px] w-auto md:h-[58px]" />
+          <img src={info.logo} alt="Gilich Jewelry House" className="h-[46px] w-auto md:h-[58px]" />
         </LLink>
 
         <nav className="hidden items-center gap-8 lg:flex">
