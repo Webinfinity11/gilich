@@ -1,0 +1,331 @@
+{
+  "categories": [
+    {
+      "wpId": 117,
+      "name": "Accessories",
+      "slug": "accessories",
+      "description": null,
+      "parentWpId": null,
+      "image": null
+    },
+    {
+      "wpId": 110,
+      "name": "Bangles",
+      "slug": "bangles",
+      "description": null,
+      "parentWpId": 30,
+      "image": null
+    },
+    {
+      "wpId": 30,
+      "name": "Bracelets",
+      "slug": "bracelets",
+      "description": null,
+      "parentWpId": null,
+      "image": null
+    },
+    {
+      "wpId": 111,
+      "name": "Chain bracelets",
+      "slug": "chain-bracelets",
+      "description": null,
+      "parentWpId": 30,
+      "image": null
+    },
+    {
+      "wpId": 101,
+      "name": "Chandelier",
+      "slug": "chandelier",
+      "description": null,
+      "parentWpId": 31,
+      "image": null
+    },
+    {
+      "wpId": 91,
+      "name": "Cocktail",
+      "slug": "cocktail",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    },
+    {
+      "wpId": 102,
+      "name": "Cuffs",
+      "slug": "cuffs",
+      "description": null,
+      "parentWpId": 31,
+      "image": null
+    },
+    {
+      "wpId": 100,
+      "name": "Drop / Dangle",
+      "slug": "drop-dangle",
+      "description": null,
+      "parentWpId": 31,
+      "image": null
+    },
+    {
+      "wpId": 31,
+      "name": "Earrings",
+      "slug": "earrings",
+      "description": null,
+      "parentWpId": null,
+      "image": null
+    },
+    {
+      "wpId": 99,
+      "name": "Earrings with an English clasp",
+      "slug": "earrings-with-an-english-clasp",
+      "description": null,
+      "parentWpId": 31,
+      "image": null
+    },
+    {
+      "wpId": 87,
+      "name": "Engagement",
+      "slug": "engagement",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    },
+    {
+      "wpId": 112,
+      "name": "Glider bracelets",
+      "slug": "glider-bracelets",
+      "description": null,
+      "parentWpId": 30,
+      "image": null
+    },
+    {
+      "wpId": 83,
+      "name": "Halo",
+      "slug": "halo",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    },
+    {
+      "wpId": 97,
+      "name": "Hoops",
+      "slug": "hoops",
+      "description": null,
+      "parentWpId": 31,
+      "image": null
+    },
+    {
+      "wpId": 35,
+      "name": "Necklaces",
+      "slug": "necklaces",
+      "description": null,
+      "parentWpId": null,
+      "image": null
+    },
+    {
+      "wpId": 38,
+      "name": "Rings",
+      "slug": "rings",
+      "description": null,
+      "parentWpId": null,
+      "image": null
+    },
+    {
+      "wpId": 93,
+      "name": "Signet rings",
+      "slug": "signet-rings",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    },
+    {
+      "wpId": 85,
+      "name": "Solitaire",
+      "slug": "solitaire",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    },
+    {
+      "wpId": 98,
+      "name": "Studs",
+      "slug": "studs",
+      "description": null,
+      "parentWpId": 31,
+      "image": null
+    },
+    {
+      "wpId": 109,
+      "name": "Tennis bracelets",
+      "slug": "tennis-bracelets",
+      "description": null,
+      "parentWpId": 30,
+      "image": null
+    },
+    {
+      "wpId": 95,
+      "name": "Vintage",
+      "slug": "vintage",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    },
+    {
+      "wpId": 89,
+      "name": "Wedding bands",
+      "slug": "wedding-bands",
+      "description": null,
+      "parentWpId": 38,
+      "image": null
+    }
+  ],
+  "products": [
+    {
+      "name": "Ring #1",
+      "slug": "ring-1",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/486638620_17900119770118951_7551211146997591212_n-1.webp",
+        "/media/582120915_17928768387118951_3258188389165472868_n.webp"
+      ],
+      "categories": [
+        "accessories",
+        "bangles",
+        "bracelets",
+        "chain-bracelets",
+        "chandelier",
+        "cocktail",
+        "cuffs",
+        "drop-dangle",
+        "earrings",
+        "earrings-with-an-english-clasp",
+        "engagement",
+        "glider-bracelets",
+        "halo",
+        "hoops",
+        "necklaces",
+        "rings",
+        "signet-rings",
+        "solitaire",
+        "studs",
+        "tennis-bracelets",
+        "vintage",
+        "wedding-bands"
+      ]
+    },
+    {
+      "name": "Necklace #1",
+      "slug": "necklace-1",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/500323707_17907175482118951_8767736845219004429_n.webp",
+        "/media/601596657_17931800790118951_6389879069175388593_n1.webp"
+      ],
+      "categories": [
+        "necklaces"
+      ]
+    },
+    {
+      "name": "Bracelet #1",
+      "slug": "bracelet-1",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/491415234_17902466067118951_8696935441463922208_n.webp",
+        "/media/516533890_17912927103118951_945753156400585319_n.webp"
+      ],
+      "categories": [
+        "bracelets"
+      ]
+    },
+    {
+      "name": "Earrings #1",
+      "slug": "earrings-1",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/490817288_17903501811118951_6888239996384526735_n.webp",
+        "/media/615281699_17935383765118951_7062336907708994885_n.webp"
+      ],
+      "categories": [
+        "earrings"
+      ]
+    },
+    {
+      "name": "Ring #2",
+      "slug": "ring-2",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/485457754_17899433175118951_2602334662527813599_n.jpg",
+        "/media/582120915_17928768387118951_3258188389165472868_n.webp"
+      ],
+      "categories": [
+        "rings"
+      ]
+    },
+    {
+      "name": "Necklace #2",
+      "slug": "necklace-2",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/503375078_17908665012118951_4719371333748539218_n.jpg",
+        "/media/601596657_17931800790118951_6389879069175388593_n1.webp"
+      ],
+      "categories": [
+        "necklaces"
+      ]
+    },
+    {
+      "name": "Bracelet #2",
+      "slug": "bracelet-2",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/503363565_17908664982118951_7707477384302178084_n.jpg",
+        "/media/516533890_17912927103118951_945753156400585319_n.webp"
+      ],
+      "categories": [
+        "bracelets"
+      ]
+    },
+    {
+      "name": "Earrings #2",
+      "slug": "earrings-2",
+      "price": 10000,
+      "salePrice": null,
+      "sku": null,
+      "shortDescription": null,
+      "description": null,
+      "images": [
+        "/media/499657398_17907175464118951_3345572390564499530_n.jpg",
+        "/media/615281699_17935383765118951_7062336907708994885_n.webp"
+      ],
+      "categories": [
+        "earrings"
+      ]
+    }
+  ]
+}
