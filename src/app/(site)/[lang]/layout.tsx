@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
   const { lang } = await params;
   if (!isLang(lang)) return {};
   return {
-    metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
+    metadataBase: new URL(process.env.SITE_URL ?? "https://gilich.jewelry"),
     title: { default: "Gilich Jewelry", template: "%s – Gilich Jewelry" },
     description: getDict(lang).meta.description,
     alternates: { languages: { en: localePath("en", "/"), ka: localePath("ka-ge", "/") } },

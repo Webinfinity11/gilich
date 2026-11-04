@@ -4,7 +4,7 @@ export const site = {
   address: "ILIA Chavchavadze Ave. 39B, Tbilisi, Georgia",
   phone: "+995 557 42 80 26",
   phoneHref: "tel:+995557428026",
-  email: "info@mediumslateblue-pony-336763.hostingersite.com",
+  email: "info@gilich.jewelry",
   instagram: "https://www.instagram.com/gilich_jewelry_house",
   instagramHandle: "@gilich_jewelry_house",
   facebook: "https://www.facebook.com/gilichjewelryhouse",
