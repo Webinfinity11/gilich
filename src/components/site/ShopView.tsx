@@ -72,12 +72,12 @@ export function ShopView({
     <aside className="space-y-10">
       <div>
         <h3 className="mb-5 text-xl uppercase text-ink">{t.shop.categories}</h3>
-        <ul className="space-y-3 text-[15px]">
+        <ul className="space-y-1 text-[15px]">
           {categories.map((c) => {
             const on = selectedCats.includes(c.slug);
             return (
               <li key={c.id}>
-                <Link href={toggle("category", selectedCats, c.slug)} scroll={false} className="flex items-center gap-3 text-ink hover:opacity-70">
+                <Link href={toggle("category", selectedCats, c.slug)} scroll={false} className="flex items-center gap-3 py-1.5 text-ink hover:opacity-70">
                   <span className={`flex size-[14px] shrink-0 items-center justify-center border ${on ? "border-ink bg-ink" : "border-[#c9c9c9]"}`}>
                     {on && <span className="size-1.5 bg-white" />}
                   </span>

@@ -7,7 +7,7 @@ export function ContactList() {
   const { t } = useI18n();
   const info = useSiteInfo();
   return (
-    <dl className="mt-8 max-w-[250px] text-[15px]">
+    <dl className="mt-8 text-[15px] lg:max-w-[250px]">
       {[
         { t: t.contact.storeAddress, v: info.address },
         { t: t.contact.phone, v: info.phone, href: info.phoneHref },

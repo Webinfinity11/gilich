@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProductCard as Card, SortKey } from "@/lib/catalog";
+import { CloseIcon } from "./icons";
 import { useI18n } from "./lang";
 import { LLink as Link } from "./LLink";
 import { ProductCard, PriceTag } from "./ProductCard";
@@ -29,19 +30,42 @@ export function ShopGrid({
   const sortLabels = t.shop.sort;
   const [showSidebar, setShowSidebar] = useState(true);
   const [view, setView] = useState<View>("grid-3");
+  // Phones get the filters in a slide-in drawer instead of a long list below the products
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFiltersOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [filtersOpen]);
+
+  // Choosing a filter navigates; close the drawer once the new results arrive
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- close drawer when results change
+    setFiltersOpen(false);
+  }, [products]);
 
   const gridClass =
     view === "grid-2" ? "grid-cols-2" : view === "grid-3" ? "grid-cols-2 lg:grid-cols-3" : "grid-cols-1";
 
   return (
     <div className="container-site py-12 md:py-[60px]">
-      <div className="flex flex-wrap items-stretch border border-line">
-        <button type="button" onClick={() => setShowSidebar((v) => !v)} className="flex items-center gap-2 border-r border-line px-5 py-3 text-[15px] text-muted">
+      <div className="grid grid-cols-2 items-stretch border border-line lg:flex">
+        <button type="button" onClick={() => setFiltersOpen(true)} aria-expanded={filtersOpen} className="flex min-h-12 items-center justify-center gap-2 border-r border-line px-4 text-[15px] text-ink lg:hidden">
+          <Lines /> {t.shop.filters}
+        </button>
+        <button type="button" onClick={() => setShowSidebar((v) => !v)} className="hidden items-center gap-2 border-r border-line px-5 py-3 text-[15px] text-muted lg:flex">
           {showSidebar ? t.shop.hideSidebar : t.shop.showSidebar} <Lines />
         </button>
-        <label className="flex items-center border-r border-line px-5 py-3 text-[15px] text-muted">
+        <label className="flex min-h-12 min-w-0 items-center px-4 text-[15px] text-muted lg:border-r lg:border-line lg:px-5">
           <span className="sr-only">Sort products</span>
-          <select value={sort} onChange={(e) => router.push(sortHrefs[e.target.value as SortKey], { scroll: false })} className="cursor-pointer bg-transparent outline-none">
+          <select value={sort} onChange={(e) => router.push(sortHrefs[e.target.value as SortKey], { scroll: false })} className="w-full min-w-0 cursor-pointer truncate bg-transparent py-3 outline-none">
             {Object.entries(sortLabels).map(([k, label]) => (
               <option key={k} value={k}>
                 {label}
@@ -49,7 +73,7 @@ export function ShopGrid({
             ))}
           </select>
         </label>
-        <div className="ml-auto hidden items-center gap-3 px-5 md:flex">
+        <div className="ml-auto hidden items-center gap-3 px-5 lg:flex">
           <ViewButton active={view === "list"} onClick={() => setView("list")} label="List view">
             <path d="M3 5h3v3H3zM9 6.5h12M3 11h3v3H3zM9 12.5h12M3 17h3v3H3zM9 18.5h12" />
           </ViewButton>
@@ -62,14 +86,14 @@ export function ShopGrid({
         </div>
       </div>
 
-      <p className="mt-6 text-right text-sm text-muted">
+      <p className="mt-4 text-right text-sm text-muted md:mt-6">
         {query && <>{t.shop.searchFor} “{query}” – </>}
         {t.shop.showingAll(total)}
       </p>
 
-      <div className={`mt-6 grid gap-8 ${showSidebar ? "lg:grid-cols-[250px_1fr] lg:gap-[30px]" : ""}`}>
-        {showSidebar && <div className="order-2 lg:order-1">{sidebar}</div>}
-        <div className="order-1 lg:order-2">
+      <div className={`mt-4 grid gap-8 md:mt-6 ${showSidebar ? "lg:grid-cols-[250px_1fr] lg:gap-[30px]" : ""}`}>
+        {showSidebar && <div className="hidden lg:block">{sidebar}</div>}
+        <div className="min-w-0">
           {products.length === 0 ? (
             <p className="border border-line p-10 text-center text-muted">{t.shop.noProducts}</p>
           ) : view === "list" ? (
@@ -96,7 +120,7 @@ export function ShopGrid({
               ))}
             </div>
           ) : (
-            <div className={`grid gap-5 lg:gap-6 ${gridClass}`}>
+            <div className={`grid gap-3 sm:gap-5 lg:gap-6 ${gridClass}`}>
               {products.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -104,6 +128,21 @@ export function ShopGrid({
           )}
         </div>
       </div>
+
+      {filtersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={t.shop.filters}>
+          <button type="button" aria-label={t.shop.closeFilters} className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-[min(340px,88vw)] flex-col bg-white">
+            <div className="flex items-center justify-between border-b border-line px-5 py-2">
+              <p className="text-lg uppercase text-ink">{t.shop.filters}</p>
+              <button type="button" aria-label={t.shop.closeFilters} className="-mr-2 flex size-11 items-center justify-center" onClick={() => setFiltersOpen(false)}>
+                <CloseIcon className="size-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">{sidebar}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

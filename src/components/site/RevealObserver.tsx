@@ -38,12 +38,31 @@ export function RevealObserver() {
       );
     };
 
+    const show = (el: HTMLElement) => {
+      el.animate([VISIBLE, VISIBLE], { duration: 1, fill: "forwards" });
+      el.querySelectorAll(".reveal-img").forEach((img) => img.animate([{ transform: "scale(1)" }, { transform: "scale(1)" }], { duration: 1, fill: "forwards" }));
+    };
+
+    // Observed node -> the reveal elements it stands for. A "clip" element starts fully clipped
+    // (clip-path inset 100%), which Chrome counts as zero visible area, so it would never report
+    // as intersecting; its parent is observed in its place.
+    const targets = new Map<Element, HTMLElement[]>();
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          io.unobserve(e.target);
-          reveal(e.target as HTMLElement);
+          const els = targets.get(e.target) ?? [];
+          if (e.isIntersecting) {
+            io.unobserve(e.target);
+            targets.delete(e.target);
+            els.forEach(reveal);
+          } else if (e.boundingClientRect.bottom < 0) {
+            // Already scrolled past (fast scroll before hydration, back/forward scroll restore):
+            // it will never "enter" the viewport, so show it at once instead of leaving it hidden.
+            io.unobserve(e.target);
+            targets.delete(e.target);
+            els.forEach(show);
+          }
         }
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
@@ -53,7 +72,13 @@ export function RevealObserver() {
       document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
         if (watched.has(el)) return;
         watched.add(el);
-        io.observe(el);
+        const target = el.dataset.reveal === "clip" && el.parentElement ? el.parentElement : el;
+        const list = targets.get(target);
+        if (list) list.push(el);
+        else {
+          targets.set(target, [el]);
+          io.observe(target);
+        }
       });
     };
 

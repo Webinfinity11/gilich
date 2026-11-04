@@ -46,7 +46,8 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[la
             <Suspense fallback={<div className="h-[72px] border-b border-line md:h-[88px]" />}>
               <Header />
             </Suspense>
-            <main className="flex-1">
+            {/* overflow-x-clip: slide-in reveals start up to 48px past the screen edge; without it phones can drag the page sideways */}
+            <main className="flex-1 overflow-x-clip">
               <Suspense fallback={<div className="min-h-[60vh]" />}>{children}</Suspense>
             </main>
             <Footer lang={lang} info={info} />

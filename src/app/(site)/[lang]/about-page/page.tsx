@@ -38,9 +38,9 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about-pag
         <SectionTitle className="mb-10">{info.reasonsTitle}</SectionTitle>
         <div className="grid items-start gap-6 md:grid-cols-3">
           {info.reasons.map((r, i) => (
-            <div key={i} className="grid grid-cols-[56px_1fr] items-center gap-4 border border-line p-6">
+            <div key={i} className="grid gap-4 border border-line p-5 sm:grid-cols-[56px_1fr] sm:items-center sm:p-6">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={reasonIcons[i % reasonIcons.length]} alt="" className="size-14" />
+              <img src={reasonIcons[i % reasonIcons.length]} alt="" className="size-12 sm:size-14" />
               <div>
                 <h3 className="text-[15px] font-medium text-ink">{r.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{r.text}</p>

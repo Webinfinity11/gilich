@@ -46,3 +46,7 @@ next-env.d.ts
 /prisma/dev.db*
 /public/uploads
 !.env.example
+
+# playwright
+/test-results/
+/playwright-report/

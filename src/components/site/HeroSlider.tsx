@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { HeroSlide } from "@/lib/content";
 import { useI18n } from "./lang";
 import { LLink as Link } from "./LLink";
@@ -9,6 +9,21 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const count = slides.length;
+  // Phones have no arrows, so a horizontal swipe changes the slide
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t0 = e.touches[0];
+    touch.current = { x: t0.clientX, y: t0.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start || count < 2) return;
+    const t1 = e.changedTouches[0];
+    const dx = t1.clientX - start.x;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(t1.clientY - start.y)) return;
+    setIndex((i) => (i + (dx < 0 ? 1 : -1) + count) % count);
+  };
 
   useEffect(() => {
     if (count < 2) return;
@@ -19,7 +34,12 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   if (!count) return null;
 
   return (
-    <section className="relative h-[460px] overflow-hidden bg-black md:h-[600px] lg:h-[740px]" aria-roledescription="carousel">
+    <section
+      className="relative h-[min(460px,75svh)] min-h-[380px] touch-pan-y overflow-hidden bg-black md:h-[600px] lg:h-[740px]"
+      aria-roledescription="carousel"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       {slides.map((s, i) => (
         <div
           key={`${s.image}-${i}`}
@@ -36,9 +56,9 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           <div className="container-site relative flex h-full flex-col justify-center text-white">
             {i === index && (
               <div className="stagger max-w-[560px] md:pl-16 lg:pl-20">
-                {s.eyebrow && <p className="text-lg md:text-xl">{s.eyebrow}</p>}
-                {s.title && <h2 className="mt-3 text-[38px] leading-[1.1] md:text-[60px]">{s.title}</h2>}
-                <Link href={s.link} className="btn-light mt-8">
+                {s.eyebrow && <p className="text-base sm:text-lg md:text-xl">{s.eyebrow}</p>}
+                {s.title && <h2 className="mt-3 text-[32px] leading-[1.1] [overflow-wrap:anywhere] sm:text-[38px] md:text-[60px]">{s.title}</h2>}
+                <Link href={s.link} className="btn-light mt-6 md:mt-8">
                   {s.button || t.common.shopNow}
                 </Link>
               </div>
@@ -61,16 +81,19 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           </button>
         ))}
       {count > 1 && (
-        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-3">
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 md:bottom-6">
           {slides.map((s, i) => (
             <button
               key={`${s.image}-${i}`}
               type="button"
               aria-label={`Slide ${i + 1}`}
               onClick={() => setIndex(i)}
-              className="relative h-[3px] w-10 overflow-hidden bg-white/40"
+              aria-current={i === index}
+              className="px-1.5 py-4"
             >
-              {i === index && <span key={index} className="animate-progress absolute inset-0 bg-white" style={{ animationDuration: "6000ms" }} />}
+              <span className="relative block h-[3px] w-10 overflow-hidden bg-white/40">
+                {i === index && <span key={index} className="animate-progress absolute inset-0 bg-white" style={{ animationDuration: "6000ms" }} />}
+              </span>
             </button>
           ))}
         </div>

@@ -28,9 +28,46 @@ export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
   }
 
   return (
-    <div className="container-site grid gap-10 py-12 md:py-[60px] lg:grid-cols-[1fr_380px]">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-left text-[15px]">
+    <div className="container-site grid gap-10 py-10 md:py-[60px] lg:grid-cols-[1fr_380px]">
+      <div className="min-w-0">
+        {/* Phones: stacked rows, so price, quantity, subtotal and remove are all in view */}
+        <ul className="divide-y divide-line border-y border-line md:hidden">
+          {cart.map((item) => (
+            <li key={item.key} className="flex gap-4 py-4">
+              {item.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.image} alt="" className="size-20 shrink-0 border border-line object-cover" />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/product/${item.slug}`} className="text-ink [overflow-wrap:anywhere] hover:underline">
+                      {item.name}
+                    </Link>
+                    {item.variation && <p className="text-sm text-muted">{item.variation}</p>}
+                    <p className="mt-1 text-sm text-muted">{formatPrice(item.price)}</p>
+                  </div>
+                  <button type="button" aria-label={`${t.common.remove}: ${item.name}`} onClick={() => removeFromCart(item.key)} className="-mr-2 -mt-2 flex size-10 shrink-0 items-center justify-center text-muted hover:text-ink">
+                    <CloseIcon className="size-5" />
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="inline-flex h-10 items-center border border-line">
+                    <button type="button" aria-label="Decrease" onClick={() => setQty(item.key, item.qty - 1)} className="h-full w-10 text-muted hover:text-ink">
+                      −
+                    </button>
+                    <span className="w-8 text-center">{item.qty}</span>
+                    <button type="button" aria-label="Increase" onClick={() => setQty(item.key, item.qty + 1)} className="h-full w-10 text-muted hover:text-ink">
+                      +
+                    </button>
+                  </div>
+                  <p className="font-medium text-ink">{formatPrice(item.price * item.qty)}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <table className="hidden w-full text-left text-[15px] md:table">
           <thead>
             <tr className="border-b border-line text-sm uppercase text-ink">
               <th className="pb-4 font-medium" colSpan={2}>

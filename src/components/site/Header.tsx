@@ -25,6 +25,23 @@ export function Header() {
     setCartOpen(false);
   }, [pathname]);
 
+  // Lock page scroll behind the mobile menu; Escape closes any open overlay
+  useEffect(() => {
+    if (!menuOpen && !cartOpen) return;
+    const prev = document.body.style.overflow;
+    if (menuOpen) document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMenuOpen(false);
+      setCartOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen, cartOpen]);
+
   const current = stripLang(pathname);
   const isActive = (href: string) => (href === "/" ? current === "/" : current.startsWith(href));
   const nav = [
@@ -37,14 +54,14 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
       {info.announcement && <p className="bg-ink px-4 py-2 text-center text-xs tracking-wide text-white md:text-sm">{info.announcement}</p>}
-      <div className="container-site flex h-[72px] items-center justify-between gap-6 md:h-[88px]">
-        <button type="button" className="lg:hidden" aria-label={t.header.openMenu} onClick={() => setMenuOpen(true)}>
+      <div className="container-site flex h-[64px] items-center justify-between gap-4 md:h-[88px] md:gap-6">
+        <button type="button" className="-ml-2 flex size-11 items-center justify-center lg:hidden" aria-label={t.header.openMenu} aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
           <MenuIcon className="size-7" />
         </button>
 
         <LLink href="/" className="shrink-0" aria-label="Gilich Jewelry House">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={info.logo} alt="Gilich Jewelry House" className="h-[46px] w-auto md:h-[58px]" />
+          <img src={info.logo} alt="Gilich Jewelry House" className="h-[40px] w-auto md:h-[58px]" />
         </LLink>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -60,18 +77,18 @@ export function Header() {
           <LangSwitcher current={current} />
         </nav>
 
-        <div className="flex items-center gap-5">
-          <LLink href="/wishlist" aria-label={t.nav.wishlist} className="relative">
+        <div className="-mr-2 flex items-center md:gap-2">
+          <LLink href="/wishlist" aria-label={t.nav.wishlist} className="relative flex size-11 items-center justify-center">
             <HeartIcon className="size-[26px]" />
             {wishlist.length > 0 && <Badge>{wishlist.length}</Badge>}
           </LLink>
           <div className="relative">
-            <button type="button" aria-label={t.nav.cart} className="relative" onClick={() => setCartOpen((v) => !v)}>
+            <button type="button" aria-label={t.nav.cart} aria-expanded={cartOpen} className="relative flex size-11 items-center justify-center" onClick={() => setCartOpen((v) => !v)}>
               <CartIcon className="size-[26px]" />
               <Badge>{cartCount}</Badge>
             </button>
             {cartOpen && (
-              <div className="absolute right-0 top-full z-50 mt-5 w-[320px] border border-line bg-white p-5 shadow-xl">
+              <div className="absolute right-0 top-full z-50 mt-3 w-[min(320px,calc(100vw-32px))] border border-line bg-white p-5 shadow-xl md:mt-5">
                 {cart.length === 0 ? (
                   <p className="py-4 text-center text-sm text-muted">{t.header.noProducts}</p>
                 ) : (
@@ -121,19 +138,19 @@ export function Header() {
       {menuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" aria-label={t.header.closeMenu} className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
-          <nav className="absolute inset-y-0 left-0 flex w-[280px] flex-col bg-white p-6">
-            <button type="button" aria-label={t.header.closeMenu} className="mb-6 self-end" onClick={() => setMenuOpen(false)}>
+          <nav className="absolute inset-y-0 left-0 flex w-[min(300px,85vw)] flex-col overflow-y-auto overscroll-contain bg-white p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <button type="button" aria-label={t.header.closeMenu} className="-mr-2 -mt-2 mb-4 flex size-11 items-center justify-center self-end" onClick={() => setMenuOpen(false)}>
               <CloseIcon className="size-6" />
             </button>
             {nav.map((item) => (
-              <LLink key={item.href} href={item.href} className="border-b border-line py-3 uppercase">
+              <LLink key={item.href} href={item.href} className="border-b border-line py-3.5 uppercase">
                 {item.label}
               </LLink>
             ))}
-            <LLink href="/wishlist" className="border-b border-line py-3 uppercase">
+            <LLink href="/wishlist" className="border-b border-line py-3.5 uppercase">
               {t.nav.wishlist}
             </LLink>
-            <LLink href="/cart" className="border-b border-line py-3 uppercase">
+            <LLink href="/cart" className="border-b border-line py-3.5 uppercase">
               {t.nav.cart}
             </LLink>
             <div className="mt-6">
@@ -148,7 +165,7 @@ export function Header() {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="absolute -right-2 -top-1.5 flex size-[18px] items-center justify-center rounded-full bg-ink text-[10px] font-medium text-white">
+    <span className="absolute right-0 top-1 flex size-[18px] items-center justify-center rounded-full bg-ink text-[10px] font-medium text-white">
       {children}
     </span>
   );

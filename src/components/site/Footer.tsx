@@ -23,7 +23,7 @@ export function Footer({ lang, info }: { lang: Lang; info: SiteInfo }) {
   return (
     <footer>
       <div className="relative overflow-hidden bg-footer bg-cover bg-center py-14 text-white md:py-[70px]" style={{ backgroundImage: "url(/media/bg-footer1.jpg)" }}>
-        <StarSparkle className="absolute left-5 top-[38%] size-6 text-white/90" />
+        <StarSparkle className="absolute left-5 top-[38%] hidden size-6 text-white/90 md:block" />
         <StarSparkle className="absolute right-5 top-14 size-4 text-white/90" />
         <StarSparkle className="absolute bottom-8 right-6 size-3 text-white/90" />
         <div className="container-site">
@@ -31,29 +31,29 @@ export function Footer({ lang, info }: { lang: Lang; info: SiteInfo }) {
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={info.logoWhite} alt="Gilich Jewelry House" className="h-[58px] w-auto" />
-              <ul className="mt-8 space-y-3 text-[15px] text-white/90">
+              <ul className="mt-8 space-y-1 text-[15px] text-white/90">
                 <li className="flex items-center gap-3">
                   <PinIcon className="size-4 shrink-0" />
                   {info.address}
                 </li>
                 <li>
-                  <a href={info.phoneHref} className="flex items-center gap-3 hover:underline">
+                  <a href={info.phoneHref} className="flex items-center gap-3 py-1.5 hover:underline">
                     <PhoneIcon className="size-4 shrink-0" />
                     {info.phone}
                   </a>
                 </li>
                 <li>
-                  <a href={`mailto:${info.email}`} className="flex items-center gap-3 break-all hover:underline">
+                  <a href={`mailto:${info.email}`} className="flex items-center gap-3 break-all py-1.5 hover:underline">
                     <MailIcon className="size-4 shrink-0" />
                     {info.email}
                   </a>
                 </li>
               </ul>
-              <div className="mt-8 flex gap-4">
-                <a href={info.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="hover:opacity-70">
+              <div className="-ml-2.5 mt-6 flex gap-1">
+                <a href={info.facebook} target="_blank" rel="noreferrer" aria-label="Facebook" className="flex size-10 items-center justify-center hover:opacity-70">
                   <FacebookIcon className="size-5" />
                 </a>
-                <a href={info.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:opacity-70">
+                <a href={info.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="flex size-10 items-center justify-center hover:opacity-70">
                   <InstagramIcon className="size-5" />
                 </a>
               </div>
@@ -76,10 +76,10 @@ function FooterColumn({ title, links }: { title: string; links: { href: string; 
   return (
     <div>
       <h3 className="text-lg font-medium uppercase">{title}</h3>
-      <ul className="mt-4 space-y-2.5 text-[15px] text-white/90">
+      <ul className="mt-3 space-y-0.5 text-[15px] text-white/90">
         {links.map((l) => (
           <li key={l.href}>
-            <LLink href={l.href} className="hover:underline">
+            <LLink href={l.href} className="inline-block py-1.5 hover:underline">
               {l.label}
             </LLink>
           </li>

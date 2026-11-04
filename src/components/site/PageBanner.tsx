@@ -10,9 +10,9 @@ export function PageBanner({ title, crumbs }: { title: string; crumbs: { label: 
   const info = useSiteInfo();
   return (
     <section className="bg-[#f3f3f3] bg-cover bg-left" style={{ backgroundImage: `url(${info.pageBanner})` }}>
-      <div className="container-site py-16 md:py-[88px]">
-        <h1 className="text-[40px] font-medium uppercase leading-none text-ink md:text-[60px]">{title}</h1>
-        <nav className="mt-6 flex flex-wrap items-center gap-2 text-sm uppercase text-ink">
+      <div className="container-site py-10 md:py-[88px]">
+        <h1 className="text-[32px] font-medium uppercase leading-none text-ink [overflow-wrap:anywhere] md:text-[60px]">{title}</h1>
+        <nav className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm uppercase text-ink md:mt-6">
           <LLink href="/" className="hover:underline">
             {t.common.home}
           </LLink>

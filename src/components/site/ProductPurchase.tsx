@@ -170,8 +170,8 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
 
           {stock !== null && <p className={`mb-3 text-sm ${outOfStock ? "text-red-600" : "text-green-700"}`}>{outOfStock ? t.product.outOfStock : t.product.inStock(stock)}</p>}
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex h-[48px] items-center border border-line">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-[48px] shrink-0 items-center border border-line">
               <button type="button" aria-label="Decrease quantity" onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-11 text-xl text-muted hover:text-ink">
                 −
               </button>
@@ -187,7 +187,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                 +
               </button>
             </div>
-            <button type="button" onClick={add} disabled={outOfStock} className="btn-dark h-[48px]">
+            <button type="button" onClick={add} disabled={outOfStock} className="btn-dark h-[48px] min-w-0 flex-1 !px-4 sm:flex-none sm:!px-8">
               {t.product.addToCart}
             </button>
           </div>
