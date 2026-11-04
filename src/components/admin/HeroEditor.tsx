@@ -34,55 +34,55 @@ export function HeroEditor({ initial }: { initial: HeroSlideInput[] }) {
       {slides.map((s, i) => (
         <section key={i} className="admin-card p-5">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <h2 className="font-semibold">სლაიდი {i + 1}</h2>
+            <h2 className="font-semibold">Slide {i + 1}</h2>
             <div className="flex gap-1">
-              <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} className="admin-btn-ghost disabled:opacity-30" aria-label="ზემოთ">
+              <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} className="admin-btn-ghost disabled:opacity-30" aria-label="Move up">
                 ↑
               </button>
-              <button type="button" onClick={() => move(i, i + 1)} disabled={i === slides.length - 1} className="admin-btn-ghost disabled:opacity-30" aria-label="ქვემოთ">
+              <button type="button" onClick={() => move(i, i + 1)} disabled={i === slides.length - 1} className="admin-btn-ghost disabled:opacity-30" aria-label="Move down">
                 ↓
               </button>
               <button type="button" onClick={() => setSlides((list) => list.filter((_, j) => j !== i))} className="admin-btn-ghost text-red-600">
-                წაშლა
+                Delete
               </button>
             </div>
           </div>
           <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
             <div>
               <SingleImage value={s.image} onChange={(image) => update(i, { image })} />
-              <p className="mt-1 text-xs text-zinc-500">რეკომენდებული: ჰორიზონტალური, მინ. 1920px სიგანე, მაქს. 4 MB</p>
+              <p className="mt-1 text-xs text-zinc-500">Recommended: landscape, at least 1920px wide, max 4 MB</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">ქართული საიტი</p>
-              <p className="hidden text-xs font-semibold uppercase tracking-wide text-zinc-500 sm:block">ინგლისური საიტი</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Georgian site</p>
+              <p className="hidden text-xs font-semibold uppercase tracking-wide text-zinc-500 sm:block">English site</p>
               <label className="block text-sm font-medium">
-                ზედა წარწერა (ქართ.)
+                Eyebrow text (Georgian)
                 <input value={s.eyebrowKa} onChange={(e) => update(i, { eyebrowKa: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                ზედა წარწერა (EN)
+                Eyebrow text (English)
                 <input value={s.eyebrow} onChange={(e) => update(i, { eyebrow: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                სათაური (ქართ.)
+                Title (Georgian)
                 <textarea rows={2} value={s.titleKa} onChange={(e) => update(i, { titleKa: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                სათაური (EN)
+                Title (English)
                 <textarea rows={2} value={s.title} onChange={(e) => update(i, { title: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                ღილაკი (ქართ.)
+                Button (Georgian)
                 <input value={s.buttonKa} placeholder="მაღაზია" onChange={(e) => update(i, { buttonKa: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                ღილაკი (EN)
+                Button (English)
                 <input value={s.button} placeholder="Shop Now" onChange={(e) => update(i, { button: e.target.value })} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium sm:col-span-2">
-                ღილაკის ბმული
+                Button link
                 <input value={s.link} placeholder="/shop" onChange={(e) => update(i, { link: e.target.value })} className="admin-input mt-1" />
-                <span className="mt-1 block text-xs font-normal text-zinc-500">მაგ.: /shop, /product-category/rings, /product/ring-1</span>
+                <span className="mt-1 block text-xs font-normal text-zinc-500">e.g. /shop, /product-category/rings, /product/ring-1</span>
               </label>
             </div>
           </div>
@@ -91,10 +91,10 @@ export function HeroEditor({ initial }: { initial: HeroSlideInput[] }) {
 
       <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t border-zinc-200 bg-zinc-50/95 py-4 backdrop-blur">
         <button type="button" onClick={() => setSlides((list) => [...list, { ...empty }])} className="admin-btn-ghost">
-          + სლაიდის დამატება
+          + Add slide
         </button>
         <button type="button" onClick={save} disabled={pending} className="admin-btn">
-          {pending ? "ინახება..." : "შენახვა"}
+          {pending ? "Saving..." : "Save"}
         </button>
         {message && <p className={`text-sm ${message.ok ? "text-green-700" : "text-red-600"}`}>{message.text}</p>}
       </div>

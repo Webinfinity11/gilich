@@ -15,7 +15,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
   const router = useRouter();
   const [p, setP] = useState<ProductInput>(initial);
   const [slugTouched, setSlugTouched] = useState(!!initial.id);
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(saved ? { ok: true, text: "შენახულია" } : null);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(saved ? { ok: true, text: "Saved" } : null);
   const [pending, startTransition] = useTransition();
   const [descLang, setDescLang] = useState<"en" | "ka">("en");
 
@@ -60,7 +60,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
       <div className="min-w-0 space-y-6">
         <section className="admin-card space-y-4 p-5">
           <label className="block text-sm font-medium">
-            სახელი (English) *
+            Name (English) *
             <input
               value={p.name}
               required
@@ -72,7 +72,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
             />
           </label>
           <label className="block text-sm font-medium">
-            სახელი ქართულად <span className="font-normal text-zinc-500">(თუ ცარიელია, ინგლისური სახელი გამოჩნდება)</span>
+            Name (Georgian) <span className="font-normal text-zinc-500">(if empty, the English name is shown)</span>
             <input value={p.nameKa} onChange={(e) => set("nameKa", e.target.value)} className="admin-input mt-1" />
           </label>
           <label className="block text-sm font-medium">
@@ -97,29 +97,29 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
                 onClick={() => setDescLang(l)}
                 className={`-mb-px border-b-2 px-3 py-1.5 ${descLang === l ? "border-zinc-900 font-medium" : "border-transparent text-zinc-500"}`}
               >
-                {l === "en" ? "აღწერა: English" : "აღწერა: ქართული"}
+                {l === "en" ? "Description: English" : "Description: Georgian"}
               </button>
             ))}
           </div>
           {descLang === "en" ? (
             <>
               <label className="block text-sm font-medium">
-                მოკლე აღწერა (EN)
+                Short description (English)
                 <textarea value={p.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} rows={3} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                სრული აღწერა (EN)
+                Full description (English)
                 <textarea value={p.description} onChange={(e) => set("description", e.target.value)} rows={7} className="admin-input mt-1" />
               </label>
             </>
           ) : (
             <>
               <label className="block text-sm font-medium">
-                მოკლე აღწერა (ქართ.)
+                Short description (Georgian)
                 <textarea value={p.shortDescriptionKa} onChange={(e) => set("shortDescriptionKa", e.target.value)} rows={3} className="admin-input mt-1" />
               </label>
               <label className="block text-sm font-medium">
-                სრული აღწერა (ქართ.)
+                Full description (Georgian)
                 <textarea value={p.descriptionKa} onChange={(e) => set("descriptionKa", e.target.value)} rows={7} className="admin-input mt-1" />
               </label>
             </>
@@ -127,37 +127,37 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="mb-4 font-semibold">სურათები</h2>
+          <h2 className="mb-4 font-semibold">Images</h2>
           <ImageUploader value={p.images} onChange={(images) => set("images", images)} />
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="font-semibold">მთავარი პროდუქტი</h2>
-          <p className="mt-1 text-sm text-zinc-500">საიტზე ჯერ მთავარი პროდუქტი ჩანს ამ ფასით და ზედა ფოტოებით. ვარიაციის არჩევისას ფასი და ფოტოები შეიცვლება.</p>
+          <h2 className="font-semibold">Main product</h2>
+          <p className="mt-1 text-sm text-zinc-500">The site first shows the main product with this price and the images above. Choosing a variation switches the price and images.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-4">
             <label className="block text-sm font-medium">
-              ფასი ($) *
+              Price ($) *
               <input type="number" step="0.01" min="0" required value={p.price} onChange={(e) => set("price", e.target.value)} className="admin-input mt-1" />
             </label>
             <label className="block text-sm font-medium">
-              ფასდაკლებით
-              <input type="number" step="0.01" min="0" placeholder="არა" value={p.salePrice} onChange={(e) => set("salePrice", e.target.value)} className="admin-input mt-1" />
+              Sale price
+              <input type="number" step="0.01" min="0" placeholder="None" value={p.salePrice} onChange={(e) => set("salePrice", e.target.value)} className="admin-input mt-1" />
             </label>
                 <label className="block text-sm font-medium">
-                  მარაგი (ც.)
-                  <input type="number" min="0" placeholder="არ ითვლება" value={p.stock} onChange={(e) => set("stock", e.target.value)} className="admin-input mt-1" />
+                  Stock (qty)
+                  <input type="number" min="0" placeholder="Not tracked" value={p.stock} onChange={(e) => set("stock", e.target.value)} className="admin-input mt-1" />
                 </label>
                 <label className="block text-sm font-medium">
-                  SKU / კოდი
+                  SKU / code
                   <input value={p.sku} onChange={(e) => set("sku", e.target.value)} className="admin-input mt-1" />
                 </label>
           </div>
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="font-semibold">ფერები / ვარიაციები ({p.variations.length})</h2>
+          <h2 className="font-semibold">Colours / variations ({p.variations.length})</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            ცარიელი ფასი = პროდუქტის ფასი. ცარიელი მარაგი = არ ითვლება. თუ ვარიაციას ფოტო არ აქვს, პროდუქტის ფოტო ჩანს.
+            Empty price = product price. Empty stock = not tracked. If a variation has no images, the product images are shown.
           </p>
 
           <div className="mt-4 space-y-4">
@@ -171,7 +171,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
                 productImages={p.images}
                 onChange={(patch) => setVar(i, patch)}
                 onMove={(to) => moveVar(i, to)}
-                onDuplicate={() => setVariations((list) => [...list.slice(0, i + 1), { ...v, id: undefined, name: `${v.name} (ასლი)`, sku: "" }, ...list.slice(i + 1)])}
+                onDuplicate={() => setVariations((list) => [...list.slice(0, i + 1), { ...v, id: undefined, name: `${v.name} (copy)`, sku: "" }, ...list.slice(i + 1)])}
                 onRemove={() => setVariations((list) => list.filter((_, j) => j !== i))}
                 onError={(text) => setMessage({ ok: false, text })}
               />
@@ -179,7 +179,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
           </div>
 
           <button type="button" onClick={() => setVariations((list) => [...list, emptyVariation()])} className="admin-btn-ghost mt-4">
-            + ვარიაციის დამატება
+            + Add variation
           </button>
         </section>
       </div>
@@ -187,31 +187,31 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
       <aside className="space-y-6">
         <section className="admin-card space-y-4 p-5 lg:sticky lg:top-6">
           <label className="block text-sm font-medium">
-            სტატუსი
+            Status
             <select value={p.status} onChange={(e) => set("status", e.target.value as ProductInput["status"])} className="admin-input mt-1">
-              <option value="published">გამოქვეყნებული</option>
-              <option value="draft">დრაფტი (დამალული)</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft (hidden)</option>
             </select>
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={p.featured} onChange={(e) => set("featured", e.target.checked)} />
-            რჩეული პროდუქტი (მთავარ გვერდზე)
+            Featured product (on the home page)
           </label>
           {message && <p className={`text-sm ${message.ok ? "text-green-700" : "text-red-600"}`}>{message.text}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending} className="admin-btn flex-1">
-              {pending ? "ინახება..." : "შენახვა"}
+              {pending ? "Saving..." : "Save"}
             </button>
             {initial.id && (
               <Link href={`/product/${p.slug}`} target="_blank" className="admin-btn-ghost">
-                ნახვა ↗
+                View ↗
               </Link>
             )}
           </div>
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="mb-3 font-semibold">კატეგორიები</h2>
+          <h2 className="mb-3 font-semibold">Categories</h2>
           <div className="max-h-[420px] space-y-1.5 overflow-y-auto text-sm">
             {topLevel.map((c) => (
               <div key={c.id}>
@@ -229,7 +229,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
             ))}
           </div>
           <Link href="/admin/categories" className="mt-3 inline-block text-xs text-zinc-500 hover:underline">
-            + კატეგორიების მართვა
+            + Manage categories
           </Link>
         </section>
       </aside>
@@ -292,7 +292,7 @@ function VariationCard({
       <div className="flex items-center gap-2">
         <span className="w-6 shrink-0 text-sm text-zinc-400">{index + 1}.</span>
         <label
-          title="ფერი"
+          title="Colour"
           className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-full ring-1 ring-zinc-300"
           style={
             v.color
@@ -302,41 +302,41 @@ function VariationCard({
         >
           <input type="color" value={v.color || "#cccccc"} onChange={(e) => onChange({ color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" />
         </label>
-        <input value={v.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="სახელი, მაგ. Rose Gold" required className="admin-input min-w-0 flex-1 !py-2.5 font-semibold" />
-        <button type="button" onClick={() => onMove(index - 1)} disabled={index === 0} className={iconBtn} aria-label="ზემოთ">
+        <input value={v.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Name, e.g. Rose Gold" required className="admin-input min-w-0 flex-1 !py-2.5 font-semibold" />
+        <button type="button" onClick={() => onMove(index - 1)} disabled={index === 0} className={iconBtn} aria-label="Move up">
           ↑
         </button>
-        <button type="button" onClick={() => onMove(index + 1)} disabled={index === total - 1} className={iconBtn} aria-label="ქვემოთ">
+        <button type="button" onClick={() => onMove(index + 1)} disabled={index === total - 1} className={iconBtn} aria-label="Move down">
           ↓
         </button>
-        <button type="button" onClick={onDuplicate} className={iconBtn} aria-label="დუბლირება" title="დუბლირება">
+        <button type="button" onClick={onDuplicate} className={iconBtn} aria-label="Duplicate" title="Duplicate">
           ⧉
         </button>
-        <button type="button" onClick={onRemove} className={`${iconBtn} border-red-200 text-red-600 hover:bg-red-50`} aria-label="წაშლა" title="წაშლა">
+        <button type="button" onClick={onRemove} className={`${iconBtn} border-red-200 text-red-600 hover:bg-red-50`} aria-label="Delete" title="Delete">
           ✕
         </button>
       </div>
       {v.color && (
         <button type="button" onClick={() => onChange({ color: "" })} className="ml-[88px] mt-1 text-xs text-zinc-500 hover:underline">
-          ფერის მოხსნა
+          Remove colour
         </button>
       )}
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="block text-xs text-zinc-600">
-          ფასი ($)
-          <input type="number" step="0.01" min="0" placeholder={productPrice || "პროდუქტის ფასი"} value={v.price} onChange={(e) => onChange({ price: e.target.value })} className="admin-input mt-1" />
+          Price ($)
+          <input type="number" step="0.01" min="0" placeholder={productPrice || "Product price"} value={v.price} onChange={(e) => onChange({ price: e.target.value })} className="admin-input mt-1" />
         </label>
         <label className="block text-xs text-zinc-600">
-          ფასდაკლებით
-          <input type="number" step="0.01" min="0" placeholder="არა" value={v.salePrice} onChange={(e) => onChange({ salePrice: e.target.value })} className="admin-input mt-1" />
+          Sale price
+          <input type="number" step="0.01" min="0" placeholder="None" value={v.salePrice} onChange={(e) => onChange({ salePrice: e.target.value })} className="admin-input mt-1" />
         </label>
         <label className="block text-xs text-zinc-600">
-          მარაგი (ც.)
-          <input type="number" min="0" placeholder="არ ითვლება" disabled={!v.inStock} value={v.stock} onChange={(e) => onChange({ stock: e.target.value })} className="admin-input mt-1 disabled:opacity-50" />
+          Stock (qty)
+          <input type="number" min="0" placeholder="Not tracked" disabled={!v.inStock} value={v.stock} onChange={(e) => onChange({ stock: e.target.value })} className="admin-input mt-1 disabled:opacity-50" />
         </label>
         <label className="block text-xs text-zinc-600">
-          SKU / კოდი
+          SKU / code
           <input value={v.sku} onChange={(e) => onChange({ sku: e.target.value })} className="admin-input mt-1" />
         </label>
       </div>
@@ -344,11 +344,11 @@ function VariationCard({
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={v.inStock} onChange={(e) => onChange({ inStock: e.target.checked })} className="size-4" />
-          მარაგშია
+          In stock
         </label>
         {productImages.length > 0 && (
           <button type="button" onClick={() => setPicking((x) => !x)} className="font-medium text-blue-700 hover:underline">
-            პროდუქტის ფოტოდან არჩევა
+            Pick from product images
           </button>
         )}
       </div>
@@ -377,22 +377,22 @@ function VariationCard({
           <div key={url} className="group relative size-20 overflow-hidden rounded-lg bg-zinc-100 ring-1 ring-zinc-200">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="size-full object-cover" />
-            {i === 0 && <span className="absolute left-1 top-1 rounded bg-zinc-900 px-1 text-[9px] text-white">მთავარი</span>}
+            {i === 0 && <span className="absolute left-1 top-1 rounded bg-zinc-900 px-1 text-[9px] text-white">Main</span>}
             <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/55 text-xs text-white opacity-0 transition group-hover:opacity-100">
-              <button type="button" onClick={() => moveImage(i, i - 1)} className="px-1.5" aria-label="მარცხნივ">
+              <button type="button" onClick={() => moveImage(i, i - 1)} className="px-1.5" aria-label="Move left">
                 ←
               </button>
-              <button type="button" onClick={() => onChange({ images: v.images.filter((u) => u !== url) })} className="px-1.5" aria-label="წაშლა">
+              <button type="button" onClick={() => onChange({ images: v.images.filter((u) => u !== url) })} className="px-1.5" aria-label="Delete">
                 ×
               </button>
-              <button type="button" onClick={() => moveImage(i, i + 1)} className="px-1.5" aria-label="მარჯვნივ">
+              <button type="button" onClick={() => moveImage(i, i + 1)} className="px-1.5" aria-label="Move right">
                 →
               </button>
             </div>
           </div>
         ))}
         <label className="flex size-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 text-xs text-zinc-500 hover:border-zinc-500">
-          {busy ? "იტვირთება..." : "+ ფოტო"}
+          {busy ? "Uploading..." : "+ Image"}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif,image/avif"

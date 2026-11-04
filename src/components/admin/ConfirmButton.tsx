@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 export function ConfirmButton({
   action,
   children,
-  confirmLabel = "დარწმუნებული ხართ?",
+  confirmLabel = "Are you sure?",
   className = "text-sm text-red-600 hover:underline",
 }: {
   action: () => Promise<unknown>;

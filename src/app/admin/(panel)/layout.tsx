@@ -8,7 +8,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         <AdminSidebar />
       </Suspense>
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8">
-        <Suspense fallback={<div className="py-20 text-center text-sm text-zinc-500">იტვირთება...</div>}>{children}</Suspense>
+        <Suspense fallback={<div className="py-20 text-center text-sm text-zinc-500">Loading...</div>}>{children}</Suspense>
       </main>
     </div>
   );

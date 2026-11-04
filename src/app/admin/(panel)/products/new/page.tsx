@@ -3,7 +3,7 @@ import { ProductForm } from "@/components/admin/ProductForm";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 
-export const metadata = { title: "ახალი პროდუქტი" };
+export const metadata = { title: "New product" };
 
 export default async function NewProductPage() {
   await requireAdmin();
@@ -11,9 +11,9 @@ export default async function NewProductPage() {
   return (
     <div>
       <Link href="/admin/products" className="text-sm text-zinc-500 hover:text-zinc-900">
-        ← პროდუქცია
+        ← Products
       </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-semibold">ახალი პროდუქტი</h1>
+      <h1 className="mb-6 mt-2 text-2xl font-semibold">New product</h1>
       <ProductForm
         categories={categories}
         initial={{

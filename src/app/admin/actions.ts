@@ -23,12 +23,12 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
   const password = String(formData.get("password") ?? "");
   const expectedEmail = (process.env.ADMIN_EMAIL ?? "").toLowerCase();
   const expectedPassword = process.env.ADMIN_PASSWORD ?? "";
-  if (!expectedEmail || !expectedPassword) return { ok: false, message: "ADMIN_EMAIL / ADMIN_PASSWORD არ არის მითითებული .env-ში" };
+  if (!expectedEmail || !expectedPassword) return { ok: false, message: "ADMIN_EMAIL / ADMIN_PASSWORD are not set in .env" };
 
   const valid = safeEqual(email, expectedEmail) && safeEqual(password, expectedPassword);
   if (!valid) {
     await new Promise((r) => setTimeout(r, 600)); // slow down guessing
-    return { ok: false, message: "მომხმარებელი ან პაროლი არასწორია" };
+    return { ok: false, message: "Incorrect username or password" };
   }
   const store = await cookies();
   store.set(SESSION_COOKIE, await createSessionToken(email), sessionCookieOptions);
@@ -51,7 +51,7 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
     const urls = await Promise.all(files.map(saveImage));
     return { urls };
   } catch (e) {
-    return { urls: [], error: e instanceof Error ? e.message : "ატვირთვა ვერ მოხერხდა" };
+    return { urls: [], error: e instanceof Error ? e.message : "Upload failed" };
   }
 }
 
@@ -109,10 +109,10 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   await requireAdmin();
 
   const name = input.name.trim();
-  if (!name) return { ok: false, message: "შეიყვანეთ პროდუქტის სახელი" };
+  if (!name) return { ok: false, message: "Enter a product name" };
 
   const price = toCents(input.price);
-  if (price === null) return { ok: false, message: "შეიყვანეთ პროდუქტის ფასი" };
+  if (price === null) return { ok: false, message: "Enter a product price" };
   const productSale = toCents(input.salePrice);
   const urls = (list: unknown) => (Array.isArray(list) ? list.filter((u): u is string => typeof u === "string" && u.length > 0) : []);
 
@@ -192,7 +192,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   });
 
   updateTag(CATALOG_TAG);
-  return { ok: true, message: "შენახულია", id };
+  return { ok: true, message: "Saved", id };
 }
 
 export async function deleteProduct(id: number) {
@@ -238,9 +238,9 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
   await requireAdmin();
   const id = Number(formData.get("id")) || undefined;
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { ok: false, message: "შეიყვანეთ კატეგორიის სახელი" };
+  if (!name) return { ok: false, message: "Enter a category name" };
   const parentId = Number(formData.get("parentId")) || null;
-  if (id && parentId === id) return { ok: false, message: "კატეგორია თავისივე მშობელი ვერ იქნება" };
+  if (id && parentId === id) return { ok: false, message: "A category can't be its own parent" };
 
   const slug = await uniqueSlug(String(formData.get("slug") ?? "").trim() || name, "category", id);
   let image = String(formData.get("currentImage") ?? "") || null;
@@ -249,7 +249,7 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
     try {
       image = await saveImage(file);
     } catch (e) {
-      return { ok: false, message: e instanceof Error ? e.message : "ფოტო ვერ აიტვირთა" };
+      return { ok: false, message: e instanceof Error ? e.message : "Image upload failed" };
     }
   }
   if (formData.get("removeImage") === "on") image = null;
@@ -332,11 +332,11 @@ export async function saveHero(slides: HeroSlideInput[]): Promise<{ ok: boolean;
       link: text(s.link) || "/shop",
     }))
     .filter((s) => s.image);
-  if (!clean.length) return { ok: false, message: "დაამატეთ მინიმუმ ერთი სლაიდი ფოტოთი" };
+  if (!clean.length) return { ok: false, message: "Add at least one slide with an image" };
   const value = JSON.stringify(clean);
   await db.setting.upsert({ where: { key: "hero" }, create: { key: "hero", value }, update: { value } });
   updateTag(CONTENT_TAG);
-  return { ok: true, message: "შენახულია, ცვლილება საიტზე უკვე ჩანს" };
+  return { ok: true, message: "Saved. The change is already live on the site" };
 }
 
 export async function saveSettings(input: SiteSettingsInput): Promise<{ ok: boolean; message: string }> {
@@ -351,9 +351,9 @@ export async function saveSettings(input: SiteSettingsInput): Promise<{ ok: bool
       textKa: text(r.textKa),
     })),
   } as SiteSettingsInput;
-  if (!clean.phone || !clean.email) return { ok: false, message: "ტელეფონი და ელფოსტა სავალდებულოა" };
+  if (!clean.phone || !clean.email) return { ok: false, message: "Phone and email are required" };
   const value = JSON.stringify(clean);
   await db.setting.upsert({ where: { key: "site" }, create: { key: "site", value }, update: { value } });
   updateTag(CONTENT_TAG);
-  return { ok: true, message: "შენახულია, ცვლილება საიტზე უკვე ჩანს" };
+  return { ok: true, message: "Saved. The change is already live on the site" };
 }

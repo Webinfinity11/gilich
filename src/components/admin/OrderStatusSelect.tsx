@@ -8,7 +8,7 @@ export function OrderStatusSelect({ id, status }: { id: number; status: string }
   const [pending, startTransition] = useTransition();
   return (
     <label className="flex items-center gap-2 text-sm">
-      სტატუსი:
+      Status:
       <select
         value={status}
         disabled={pending}

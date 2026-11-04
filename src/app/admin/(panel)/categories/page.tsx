@@ -5,7 +5,7 @@ import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 
-export const metadata = { title: "კატეგორიები" };
+export const metadata = { title: "Categories" };
 
 export default async function CategoriesPage({ searchParams }: PageProps<"/admin/categories">) {
   await requireAdmin();
@@ -23,10 +23,10 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/admin
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">კატეგორიები ({categories.length})</h1>
+      <h1 className="text-2xl font-semibold">Categories ({categories.length})</h1>
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[360px_1fr]">
         <section className="admin-card p-5">
-          <h2 className="mb-4 font-semibold">{editing ? `რედაქტირება: ${editing.name}` : "ახალი კატეგორია"}</h2>
+          <h2 className="mb-4 font-semibold">{editing ? `Edit: ${editing.name}` : "New category"}</h2>
           <CategoryForm
             key={editing?.id ?? "new"}
             category={editing}
@@ -34,7 +34,7 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/admin
           />
           {editing && (
             <Link href="/admin/categories" className="mt-3 inline-block text-sm text-zinc-500 hover:underline">
-              გაუქმება
+              Cancel
             </Link>
           )}
         </section>
@@ -44,9 +44,9 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/admin
             <thead className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="w-14 px-4 py-3" />
-                <th className="px-4 py-3 font-medium">სახელი</th>
+                <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
-                <th className="px-4 py-3 font-medium">პროდ.</th>
+                <th className="px-4 py-3 font-medium">Products</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -70,9 +70,9 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/admin
                   <td className="px-4 py-2">
                     <div className="flex justify-end gap-3 whitespace-nowrap">
                       <Link href={`/admin/categories?edit=${c.id}`} className="hover:underline">
-                        რედაქტირება
+                        Edit
                       </Link>
-                      <ConfirmButton action={deleteCategory.bind(null, c.id)}>წაშლა</ConfirmButton>
+                      <ConfirmButton action={deleteCategory.bind(null, c.id)}>Delete</ConfirmButton>
                     </div>
                   </td>
                 </tr>

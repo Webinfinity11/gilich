@@ -13,21 +13,21 @@ export function CategoryForm({ category, parents }: { category: Category | null;
       {category && <input type="hidden" name="id" value={category.id} />}
       <input type="hidden" name="currentImage" value={category?.image ?? ""} />
       <label className="block text-sm font-medium">
-        სახელი (English) *
+        Name (English) *
         <input name="name" required defaultValue={category?.name} className="admin-input mt-1" />
       </label>
       <label className="block text-sm font-medium">
-        სახელი ქართულად
+        Name (Georgian)
         <input name="nameKa" defaultValue={category?.nameKa ?? ""} className="admin-input mt-1" />
       </label>
       <label className="block text-sm font-medium">
-        Slug (ცარიელი = ავტომატური)
+        Slug (empty = automatic)
         <input name="slug" defaultValue={category?.slug} className="admin-input mt-1" />
       </label>
       <label className="block text-sm font-medium">
-        მშობელი კატეგორია
+        Parent category
         <select name="parentId" defaultValue={category?.parentId ?? ""} className="admin-input mt-1">
-          <option value="">— არცერთი (მთავარი) —</option>
+          <option value="">— None (top level) —</option>
           {parents.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -36,25 +36,25 @@ export function CategoryForm({ category, parents }: { category: Category | null;
         </select>
       </label>
       <label className="block text-sm font-medium">
-        აღწერა (EN)
+        Description (English)
         <textarea name="description" rows={3} defaultValue={category?.description ?? ""} className="admin-input mt-1" />
       </label>
       <label className="block text-sm font-medium">
-        აღწერა (ქართ.)
+        Description (Georgian)
         <textarea name="descriptionKa" rows={3} defaultValue={category?.descriptionKa ?? ""} className="admin-input mt-1" />
       </label>
       <label className="block text-sm font-medium">
-        რიგითობა
+        Sort order
         <input name="sortOrder" type="number" defaultValue={category?.sortOrder ?? 0} className="admin-input mt-1" />
       </label>
       <div className="text-sm font-medium">
-        ფოტო
+        Image
         {category?.image && (
           <div className="mt-2 flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={category.image} alt="" className="size-16 rounded object-cover ring-1 ring-zinc-200" />
             <label className="flex items-center gap-1.5 text-xs font-normal text-red-600">
-              <input type="checkbox" name="removeImage" /> ფოტოს მოხსნა
+              <input type="checkbox" name="removeImage" /> Remove image
             </label>
           </div>
         )}
@@ -62,7 +62,7 @@ export function CategoryForm({ category, parents }: { category: Category | null;
       </div>
       {state && !state.ok && <p className="text-sm text-red-600">{state.message}</p>}
       <button type="submit" disabled={pending} className="admin-btn w-full">
-        {pending ? "ინახება..." : category ? "შენახვა" : "დამატება"}
+        {pending ? "Saving..." : category ? "Save" : "Add"}
       </button>
     </form>
   );

@@ -4,7 +4,9 @@ import { db } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
 import { ORDER_STATUSES, paymentLabels, statusColors, statusLabels } from "@/lib/orders";
 
-export const metadata = { title: "შეკვეთები" };
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+export const metadata = { title: "Orders" };
 
 export default async function OrdersPage({ searchParams }: PageProps<"/admin/orders">) {
   await requireAdmin();
@@ -40,11 +42,11 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">შეკვეთები</h1>
+      <h1 className="text-2xl font-semibold">Orders</h1>
 
       <div className="mt-6 flex flex-wrap gap-2 text-sm">
         <Tab href="/admin/orders" active={!status}>
-          ყველა ({total})
+          All ({total})
         </Tab>
         {ORDER_STATUSES.map((s) => (
           <Tab key={s} href={`/admin/orders?status=${s}`} active={status === s}>
@@ -55,9 +57,9 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
 
       <form className="mt-4 flex gap-2">
         {status && <input type="hidden" name="status" value={status} />}
-        <input name="q" defaultValue={q} placeholder="ძებნა: #ნომერი, სახელი, ტელეფონი, ელფოსტა" className="admin-input max-w-md" />
+        <input name="q" defaultValue={q} placeholder="Search: #number, name, phone, email" className="admin-input max-w-md" />
         <button type="submit" className="admin-btn-ghost">
-          ძებნა
+          Search
         </button>
       </form>
 
@@ -65,12 +67,12 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
         <table className="w-full min-w-[760px] text-sm">
           <thead className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500">
             <tr>
-              <th className="px-4 py-3 font-medium">შეკვეთა</th>
-              <th className="px-4 py-3 font-medium">თარიღი</th>
-              <th className="px-4 py-3 font-medium">ტელეფონი</th>
-              <th className="px-4 py-3 font-medium">გადახდა</th>
-              <th className="px-4 py-3 font-medium">სტატუსი</th>
-              <th className="px-4 py-3 text-right font-medium">ჯამი</th>
+              <th className="px-4 py-3 font-medium">Order</th>
+              <th className="px-4 py-3 font-medium">Date</th>
+              <th className="px-4 py-3 font-medium">Phone</th>
+              <th className="px-4 py-3 font-medium">Payment</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 text-right font-medium">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -80,9 +82,9 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
                   <Link href={`/admin/orders/${o.id}`} className="font-medium hover:underline">
                     #{o.id} {o.firstName} {o.lastName}
                   </Link>
-                  <p className="text-xs text-zinc-500">{o.items.reduce((s, i) => s + i.quantity, 0)} ნივთი</p>
+                  <p className="text-xs text-zinc-500">{plural(o.items.reduce((s, i) => s + i.quantity, 0), "item")}</p>
                 </td>
-                <td className="px-4 py-3 text-zinc-600">{o.createdAt.toLocaleString("ka-GE")}</td>
+                <td className="px-4 py-3 text-zinc-600">{o.createdAt.toLocaleString("en-GB")}</td>
                 <td className="px-4 py-3">{o.phone}</td>
                 <td className="px-4 py-3 text-zinc-600">{paymentLabels[o.paymentMethod] ?? o.paymentMethod}</td>
                 <td className="px-4 py-3">
@@ -93,7 +95,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
             ))}
           </tbody>
         </table>
-        {orders.length === 0 && <p className="p-8 text-center text-sm text-zinc-500">შეკვეთები ვერ მოიძებნა</p>}
+        {orders.length === 0 && <p className="p-8 text-center text-sm text-zinc-500">No orders found</p>}
       </div>
     </div>
   );

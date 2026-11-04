@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
 import { statusColors, statusLabels } from "@/lib/orders";
 
-export const metadata = { title: "მთავარი" };
+export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   await requireAdmin();
@@ -19,20 +19,20 @@ export default async function DashboardPage() {
   ]);
 
   const stats = [
-    { label: "შემოსავალი", value: formatPrice(revenue._sum.total ?? 0), href: "/admin/orders" },
-    { label: "შეკვეთები", value: orders, href: "/admin/orders" },
-    { label: "ახალი შეკვეთები", value: pending, href: "/admin/orders?status=pending" },
-    { label: "პროდუქტები", value: products, href: "/admin/products" },
-    { label: "კატეგორიები", value: categories, href: "/admin/categories" },
-    { label: "წაუკითხავი შეტყობინება", value: unread, href: "/admin/messages" },
+    { label: "Revenue", value: formatPrice(revenue._sum.total ?? 0), href: "/admin/orders" },
+    { label: "Orders", value: orders, href: "/admin/orders" },
+    { label: "New orders", value: pending, href: "/admin/orders?status=pending" },
+    { label: "Products", value: products, href: "/admin/products" },
+    { label: "Categories", value: categories, href: "/admin/categories" },
+    { label: "Unread messages", value: unread, href: "/admin/messages" },
   ];
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">მთავარი</h1>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
         <Link href="/admin/products/new" className="admin-btn">
-          + ახალი პროდუქტი
+          + New product
         </Link>
       </div>
 
@@ -47,13 +47,13 @@ export default async function DashboardPage() {
 
       <div className="admin-card mt-8 overflow-hidden">
         <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
-          <h2 className="font-semibold">ბოლო შეკვეთები</h2>
+          <h2 className="font-semibold">Recent orders</h2>
           <Link href="/admin/orders" className="text-sm text-zinc-500 hover:text-zinc-900">
-            ყველა →
+            View all →
           </Link>
         </div>
         {recent.length === 0 ? (
-          <p className="p-8 text-center text-sm text-zinc-500">შეკვეთები ჯერ არ არის</p>
+          <p className="p-8 text-center text-sm text-zinc-500">No orders yet</p>
         ) : (
           <table className="w-full text-sm">
             <tbody className="divide-y divide-zinc-100">
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
                       #{o.id} {o.firstName} {o.lastName}
                     </Link>
                   </td>
-                  <td className="px-5 py-3 text-zinc-500">{o.createdAt.toLocaleString("ka-GE")}</td>
+                  <td className="px-5 py-3 text-zinc-500">{o.createdAt.toLocaleString("en-GB")}</td>
                   <td className="px-5 py-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs ${statusColors[o.status]}`}>{statusLabels[o.status] ?? o.status}</span>
                   </td>

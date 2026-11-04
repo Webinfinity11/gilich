@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
 
-export const metadata = { title: "პროდუქცია" };
+export const metadata = { title: "Products" };
 
 export default async function ProductsPage({ searchParams }: PageProps<"/admin/products">) {
   await requireAdmin();
@@ -32,16 +32,16 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">პროდუქცია ({products.length})</h1>
+        <h1 className="text-2xl font-semibold">Products ({products.length})</h1>
         <Link href="/admin/products/new" className="admin-btn">
-          + ახალი პროდუქტი
+          + New product
         </Link>
       </div>
 
       <form className="mt-6 flex flex-wrap gap-3">
-        <input name="q" defaultValue={q} placeholder="ძებნა სახელით ან SKU-ით" className="admin-input max-w-xs" />
+        <input name="q" defaultValue={q} placeholder="Search by name or SKU" className="admin-input max-w-xs" />
         <select name="category" defaultValue={category || ""} className="admin-input max-w-[220px]">
-          <option value="">ყველა კატეგორია</option>
+          <option value="">All categories</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -49,7 +49,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
           ))}
         </select>
         <button type="submit" className="admin-btn-ghost">
-          გაფილტვრა
+          Filter
         </button>
       </form>
 
@@ -58,11 +58,11 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
           <thead className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500">
             <tr>
               <th className="w-16 px-4 py-3" />
-              <th className="px-4 py-3 font-medium">სახელი</th>
-              <th className="px-4 py-3 font-medium">ფასი</th>
-              <th className="px-4 py-3 font-medium">მარაგი</th>
-              <th className="px-4 py-3 font-medium">კატეგორიები</th>
-              <th className="px-4 py-3 font-medium">სტატუსი</th>
+              <th className="px-4 py-3 font-medium">Name</th>
+              <th className="px-4 py-3 font-medium">Price</th>
+              <th className="px-4 py-3 font-medium">Stock</th>
+              <th className="px-4 py-3 font-medium">Categories</th>
+              <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -91,12 +91,12 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
                       {p.name}
                     </Link>
                     {p.nameKa && <span className="ml-2 text-xs text-zinc-500">{p.nameKa}</span>}
-                    {p.variations.length > 0 && <span className="ml-2 rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600">{p.variations.length} ვარიაცია</span>}
+                    {p.variations.length > 0 && <span className="ml-2 rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600">{p.variations.length} {p.variations.length === 1 ? "variation" : "variations"}</span>}
                     {p.sku && <p className="text-xs text-zinc-500">SKU: {p.sku}</p>}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {min === max ? formatPrice(min) : `${formatPrice(min)} – ${formatPrice(max)}`}
-                    {p.salePrice !== null && !p.variations.length && <p className="text-xs text-red-600">ფასდაკლება: {formatPrice(p.salePrice)}</p>}
+                    {p.salePrice !== null && !p.variations.length && <p className="text-xs text-red-600">Sale: {formatPrice(p.salePrice)}</p>}
                   </td>
                   <td className="px-4 py-3">{stock}</td>
                   <td className="max-w-[220px] px-4 py-3 text-zinc-600">
@@ -104,21 +104,21 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
                   </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2.5 py-0.5 text-xs ${p.status === "published" ? "bg-green-100 text-green-800" : "bg-zinc-200 text-zinc-600"}`}>
-                      {p.status === "published" ? "გამოქვეყნებული" : "დრაფტი"}
+                      {p.status === "published" ? "Published" : "Draft"}
                     </span>
-                    {p.featured && <span className="ml-1 text-amber-500" title="რჩეული">★</span>}
+                    {p.featured && <span className="ml-1 text-amber-500" title="Featured">★</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                       <Link href={`/admin/products/${p.id}`} className="text-sm hover:underline">
-                        რედაქტირება
+                        Edit
                       </Link>
                       <form action={duplicateProduct.bind(null, p.id)}>
                         <button type="submit" className="text-sm text-zinc-500 hover:underline">
-                          ასლი
+                          Duplicate
                         </button>
                       </form>
-                      <ConfirmButton action={deleteProduct.bind(null, p.id)}>წაშლა</ConfirmButton>
+                      <ConfirmButton action={deleteProduct.bind(null, p.id)}>Delete</ConfirmButton>
                     </div>
                   </td>
                 </tr>
@@ -126,7 +126,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
             })}
           </tbody>
         </table>
-        {products.length === 0 && <p className="p-8 text-center text-sm text-zinc-500">პროდუქტები ვერ მოიძებნა</p>}
+        {products.length === 0 && <p className="p-8 text-center text-sm text-zinc-500">No products found</p>}
       </div>
     </div>
   );

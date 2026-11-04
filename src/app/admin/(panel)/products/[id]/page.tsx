@@ -6,7 +6,7 @@ import { parseJson, variationName } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { fromCents } from "@/lib/money";
 
-export const metadata = { title: "პროდუქტის რედაქტირება" };
+export const metadata = { title: "Edit product" };
 
 export default async function EditProductPage({ params, searchParams }: PageProps<"/admin/products/[id]">) {
   await requireAdmin();
@@ -24,7 +24,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   return (
     <div>
       <Link href="/admin/products" className="text-sm text-zinc-500 hover:text-zinc-900">
-        ← პროდუქცია
+        ← Products
       </Link>
       <h1 className="mb-6 mt-2 text-2xl font-semibold">{product.name}</h1>
       <ProductForm

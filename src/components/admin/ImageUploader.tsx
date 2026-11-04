@@ -53,15 +53,15 @@ export function ImageUploader({ value, onChange }: { value: string[]; onChange: 
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="size-full object-cover" />
-            {i === 0 && <span className="absolute left-1.5 top-1.5 rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white">მთავარი</span>}
+            {i === 0 && <span className="absolute left-1.5 top-1.5 rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white">Main</span>}
             <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/50 p-1 opacity-0 transition group-hover:opacity-100">
-              <button type="button" onClick={() => move(i, i - 1)} className="px-1.5 text-white" aria-label="მარცხნივ">
+              <button type="button" onClick={() => move(i, i - 1)} className="px-1.5 text-white" aria-label="Move left">
                 ←
               </button>
-              <button type="button" onClick={() => onChange(value.filter((u) => u !== url))} className="px-1.5 text-xs text-white" aria-label="წაშლა">
-                წაშლა
+              <button type="button" onClick={() => onChange(value.filter((u) => u !== url))} className="px-1.5 text-xs text-white" aria-label="Delete">
+                Delete
               </button>
-              <button type="button" onClick={() => move(i, i + 1)} className="px-1.5 text-white" aria-label="მარჯვნივ">
+              <button type="button" onClick={() => move(i, i + 1)} className="px-1.5 text-white" aria-label="Move right">
                 →
               </button>
             </div>
@@ -79,7 +79,7 @@ export function ImageUploader({ value, onChange }: { value: string[]; onChange: 
           className="flex aspect-square flex-col items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 text-xs text-zinc-500 hover:border-zinc-500 hover:text-zinc-800"
         >
           <span className="text-2xl">+</span>
-          {busy ? "იტვირთება..." : "ფოტოს დამატება"}
+          {busy ? "Uploading..." : "Add images"}
         </button>
       </div>
       <input
@@ -94,7 +94,7 @@ export function ImageUploader({ value, onChange }: { value: string[]; onChange: 
         }}
       />
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      <p className="mt-2 text-xs text-zinc-500">გადაათრიეთ ფოტოები თანმიმდევრობის შესაცვლელად. მაქს. 4 MB თითო ფოტო.</p>
+      <p className="mt-2 text-xs text-zinc-500">Drag images to reorder. Max 4 MB per image.</p>
     </div>
   );
 }

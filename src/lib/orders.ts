@@ -2,10 +2,10 @@ export const ORDER_STATUSES = ["pending", "processing", "completed", "cancelled"
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const statusLabels: Record<string, string> = {
-  pending: "ახალი",
-  processing: "მუშავდება",
-  completed: "დასრულებული",
-  cancelled: "გაუქმებული",
+  pending: "New",
+  processing: "Processing",
+  completed: "Completed",
+  cancelled: "Cancelled",
 };
 
 export const statusColors: Record<string, string> = {
@@ -16,6 +16,6 @@ export const statusColors: Record<string, string> = {
 };
 
 export const paymentLabels: Record<string, string> = {
-  cod: "ადგილზე გადახდა",
-  bank: "საბანკო გადარიცხვა",
+  cod: "Cash on delivery",
+  bank: "Bank transfer",
 };

@@ -39,11 +39,11 @@ export function SingleImage({ value, onChange, aspect = "aspect-[16/9]" }: { val
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt="" className="absolute inset-0 size-full object-cover" />
             <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-sm text-white opacity-0 transition group-hover:opacity-100">
-              {busy ? "იტვირთება..." : "ფოტოს შეცვლა"}
+              {busy ? "Uploading..." : "Change image"}
             </span>
           </>
         ) : (
-          <span className="text-sm text-zinc-500">{busy ? "იტვირთება..." : "+ ფოტოს ატვირთვა"}</span>
+          <span className="text-sm text-zinc-500">{busy ? "Uploading..." : "+ Upload image"}</span>
         )}
       </button>
       <input

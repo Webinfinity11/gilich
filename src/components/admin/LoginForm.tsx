@@ -12,16 +12,16 @@ export function LoginForm({ searchParams }: { searchParams: Promise<Record<strin
     <form action={action} className="mt-6 space-y-4">
       <input type="hidden" name="next" value={next} />
       <label className="block text-sm">
-        მომხმარებელი
+        Username
         <input name="email" type="text" required autoCapitalize="none" autoComplete="username" className="admin-input mt-1" />
       </label>
       <label className="block text-sm">
-        პაროლი
+        Password
         <input name="password" type="password" required autoComplete="current-password" className="admin-input mt-1" />
       </label>
       {state && !state.ok && <p className="text-sm text-red-600">{state.message}</p>}
       <button type="submit" disabled={pending} className="admin-btn w-full">
-        {pending ? "..." : "შესვლა"}
+        {pending ? "..." : "Sign in"}
       </button>
     </form>
   );

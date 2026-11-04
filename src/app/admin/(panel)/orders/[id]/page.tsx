@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { formatPrice } from "@/lib/money";
 import { paymentLabels } from "@/lib/orders";
 
-export const metadata = { title: "შეკვეთა" };
+export const metadata = { title: "Order" };
 
 export default async function OrderPage({ params }: PageProps<"/admin/orders/[id]">) {
   await requireAdmin();
@@ -25,13 +25,13 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[id
   return (
     <div>
       <Link href="/admin/orders" className="text-sm text-zinc-500 hover:text-zinc-900">
-        ← შეკვეთები
+        ← Orders
       </Link>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">შეკვეთა #{order.id}</h1>
+        <h1 className="text-2xl font-semibold">Order #{order.id}</h1>
         <OrderStatusSelect id={order.id} status={order.status} />
       </div>
-      <p className="mt-1 text-sm text-zinc-500">{order.createdAt.toLocaleString("ka-GE")}</p>
+      <p className="mt-1 text-sm text-zinc-500">{order.createdAt.toLocaleString("en-GB")}</p>
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_320px]">
         <section className="admin-card overflow-hidden">
@@ -39,11 +39,11 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[id
             <thead className="border-b border-zinc-200 text-left text-xs uppercase text-zinc-500">
               <tr>
                 <th className="px-4 py-3 font-medium" colSpan={2}>
-                  პროდუქტი
+                  Product
                 </th>
-                <th className="px-4 py-3 font-medium">ფასი</th>
-                <th className="px-4 py-3 font-medium">რაოდ.</th>
-                <th className="px-4 py-3 text-right font-medium">ჯამი</th>
+                <th className="px-4 py-3 font-medium">Price</th>
+                <th className="px-4 py-3 font-medium">Qty</th>
+                <th className="px-4 py-3 text-right font-medium">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -77,19 +77,19 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[id
             <tfoot className="border-t border-zinc-200">
               <tr>
                 <td colSpan={4} className="px-4 py-2 text-right text-zinc-500">
-                  ქვეჯამი
+                  Subtotal
                 </td>
                 <td className="px-4 py-2 text-right">{formatPrice(order.subtotal)}</td>
               </tr>
               <tr>
                 <td colSpan={4} className="px-4 py-2 text-right text-zinc-500">
-                  მიწოდება
+                  Shipping
                 </td>
-                <td className="px-4 py-2 text-right">{order.shipping ? formatPrice(order.shipping) : "უფასო"}</td>
+                <td className="px-4 py-2 text-right">{order.shipping ? formatPrice(order.shipping) : "Free"}</td>
               </tr>
               <tr>
                 <td colSpan={4} className="px-4 py-3 text-right font-semibold">
-                  სულ
+                  Total
                 </td>
                 <td className="px-4 py-3 text-right font-semibold">{formatPrice(order.total)}</td>
               </tr>
@@ -99,7 +99,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[id
 
         <aside className="space-y-6">
           <section className="admin-card space-y-3 p-5 text-sm">
-            <h2 className="font-semibold">მყიდველი</h2>
+            <h2 className="font-semibold">Customer</h2>
             <p className="font-medium">
               {order.firstName} {order.lastName}
             </p>
@@ -114,24 +114,24 @@ export default async function OrderPage({ params }: PageProps<"/admin/orders/[id
               </a>
             </p>
             <div className="border-t border-zinc-100 pt-3">
-              <p className="text-xs uppercase text-zinc-500">მისამართი</p>
+              <p className="text-xs uppercase text-zinc-500">Address</p>
               <p className="mt-1">
                 {order.address}, {order.city}, {order.country}
               </p>
             </div>
             <div className="border-t border-zinc-100 pt-3">
-              <p className="text-xs uppercase text-zinc-500">გადახდის მეთოდი</p>
+              <p className="text-xs uppercase text-zinc-500">Payment method</p>
               <p className="mt-1">{paymentLabels[order.paymentMethod] ?? order.paymentMethod}</p>
             </div>
             {order.note && (
               <div className="border-t border-zinc-100 pt-3">
-                <p className="text-xs uppercase text-zinc-500">შენიშვნა</p>
+                <p className="text-xs uppercase text-zinc-500">Note</p>
                 <p className="mt-1 whitespace-pre-line">{order.note}</p>
               </div>
             )}
           </section>
           <ConfirmButton action={deleteOrder.bind(null, order.id)} className="text-sm text-red-600 hover:underline">
-            შეკვეთის წაშლა
+            Delete order
           </ConfirmButton>
         </aside>
       </div>

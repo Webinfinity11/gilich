@@ -8,11 +8,11 @@ import { SingleImage } from "./SingleImage";
 type TextKey = { [K in keyof SiteSettingsInput]: SiteSettingsInput[K] extends string ? K : never }[keyof SiteSettingsInput];
 
 const tabs = [
-  { id: "header", label: "ჰედერი" },
-  { id: "contact", label: "კონტაქტი" },
-  { id: "footer", label: "ფუტერი" },
-  { id: "about", label: "ჩვენ შესახებ" },
-  { id: "pages", label: "სხვა გვერდები" },
+  { id: "header", label: "Header" },
+  { id: "contact", label: "Contact" },
+  { id: "footer", label: "Footer" },
+  { id: "about", label: "About us" },
+  { id: "pages", label: "Other pages" },
 ] as const;
 
 export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
@@ -38,8 +38,8 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
   /** Georgian (shown on /ka-ge) first, English (shown on /) second */
   const pair = (en: TextKey, ka: TextKey, label: string, opts: { rows?: number; hint?: string } = {}) => (
     <div className="grid gap-4 md:grid-cols-2">
-      {field(ka, `${label} — ქართული საიტი`, { ...opts, hint: opts.hint ?? "ცარიელი = ინგლისური ტექსტი" })}
-      {field(en, `${label} — ინგლისური საიტი`, opts)}
+      {field(ka, `${label} — Georgian site`, { ...opts, hint: opts.hint ?? "Empty = English text is shown" })}
+      {field(en, `${label} — English site`, opts)}
     </div>
   );
 
@@ -78,9 +78,9 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
       <section className="admin-card space-y-5 p-5">
         {tab === "header" && (
           <>
-            <div className="max-w-xs">{image("logo", "ლოგო", "aspect-[3/1]", "PNG გამჭვირვალე ფონით")}</div>
-            {pair("announcement", "announcementKa", "ზედა განცხადების ზოლი", {
-              hint: "მაგ.: უფასო მიწოდება თბილისში. ცარიელი = ზოლი არ ჩანს",
+            <div className="max-w-xs">{image("logo", "Logo", "aspect-[3/1]", "PNG with a transparent background")}</div>
+            {pair("announcement", "announcementKa", "Announcement bar", {
+              hint: "e.g. Free delivery in Tbilisi. Empty = bar is hidden",
             })}
           </>
         )}
@@ -88,44 +88,44 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
         {tab === "contact" && (
           <>
             <div className="grid gap-4 md:grid-cols-2">
-              {field("phone", "ტელეფონი *", { placeholder: "+995 5XX XX XX XX" })}
-              {field("email", "ელფოსტა *", { type: "email" })}
+              {field("phone", "Phone *", { placeholder: "+995 5XX XX XX XX" })}
+              {field("email", "Email *", { type: "email" })}
             </div>
-            {pair("address", "addressKa", "მისამართი")}
+            {pair("address", "addressKa", "Address")}
             <div className="grid gap-4 md:grid-cols-2">
-              {field("instagram", "Instagram ბმული", { placeholder: "https://www.instagram.com/..." })}
-              {field("facebook", "Facebook ბმული", { placeholder: "https://www.facebook.com/..." })}
+              {field("instagram", "Instagram link", { placeholder: "https://www.instagram.com/..." })}
+              {field("facebook", "Facebook link", { placeholder: "https://www.facebook.com/..." })}
             </div>
-            {field("mapQuery", "რუკა (კონტაქტის გვერდზე)", {
-              hint: "ჩაწერეთ მისამართი ან ადგილის სახელი ისე, როგორც Google Maps-ში ეძებდით. ცარიელი = რუკა არ ჩანს",
+            {field("mapQuery", "Map (on the contact page)", {
+              hint: "Type the address or place name as you would search for it in Google Maps. Empty = no map",
             })}
           </>
         )}
 
         {tab === "footer" && (
           <>
-            <div className="max-w-xs">{image("logoWhite", "ფუტერის ლოგო (თეთრი)", "aspect-[3/1]", undefined, true)}</div>
-            {pair("footerText", "footerTextKa", "ქვედა ტექსტი (copyright)")}
-            <p className="text-xs text-zinc-500">მისამართი, ტელეფონი, ელფოსტა და სოციალური ქსელები ფუტერში „კონტაქტის“ ჩანართიდან მოდის.</p>
+            <div className="max-w-xs">{image("logoWhite", "Footer logo (white)", "aspect-[3/1]", undefined, true)}</div>
+            {pair("footerText", "footerTextKa", "Bottom text (copyright)")}
+            <p className="text-xs text-zinc-500">The address, phone, email and social links in the footer come from the Contact tab.</p>
           </>
         )}
 
         {tab === "about" && (
           <>
-            {pair("aboutTitle", "aboutTitleKa", "სათაური")}
-            {pair("aboutText", "aboutTextKa", "ტექსტი", { rows: 8, hint: "აბზაცები გამოყავით ცარიელი ხაზით. მთავარ გვერდზე პირველი 2 აბზაცი ჩანს" })}
+            {pair("aboutTitle", "aboutTitleKa", "Title")}
+            {pair("aboutText", "aboutTextKa", "Text", { rows: 8, hint: "Separate paragraphs with an empty line. The home page shows the first 2 paragraphs" })}
             <div className="grid gap-5 md:grid-cols-2">
-              {image("aboutImage", "ზედა ფოტო", "aspect-[870/577]")}
-              {image("contactImage", "ქვედა ფოტო (კონტაქტის გვერდით)", "aspect-[870/577]")}
+              {image("aboutImage", "Top image", "aspect-[870/577]")}
+              {image("contactImage", "Bottom image (next to the contact details)", "aspect-[870/577]")}
             </div>
-            {pair("reasonsTitle", "reasonsTitleKa", "უპირატესობების სათაური")}
+            {pair("reasonsTitle", "reasonsTitleKa", "Reasons title")}
             {s.reasons.map((r, i) => (
               <div key={i} className="space-y-3 rounded-lg border border-zinc-200 p-4">
-                <p className="text-sm font-semibold">უპირატესობა {i + 1}</p>
+                <p className="text-sm font-semibold">Reason {i + 1}</p>
                 <div className="grid gap-3 md:grid-cols-2">
                   {(["titleKa", "title"] as const).map((k) => (
                     <label key={k} className="block text-sm">
-                      {k === "title" ? "სათაური — ინგლისური საიტი" : "სათაური — ქართული საიტი"}
+                      {k === "title" ? "Title — English site" : "Title — Georgian site"}
                       <input
                         value={r[k]}
                         onChange={(e) => setS((prev) => ({ ...prev, reasons: prev.reasons.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)) }))}
@@ -135,7 +135,7 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
                   ))}
                   {(["textKa", "text"] as const).map((k) => (
                     <label key={k} className="block text-sm">
-                      {k === "text" ? "ტექსტი — ინგლისური საიტი" : "ტექსტი — ქართული საიტი"}
+                      {k === "text" ? "Text — English site" : "Text — Georgian site"}
                       <textarea
                         rows={4}
                         value={r[k]}
@@ -152,19 +152,19 @@ export function SettingsEditor({ initial }: { initial: SiteSettingsInput }) {
 
         {tab === "pages" && (
           <>
-            <div className="max-w-xl">{image("pageBanner", "შიდა გვერდების ბანერის ფონი", "aspect-[4/1]", "ჩანს სათაურის უკან: ჩვენ შესახებ, კონტაქტი, მაღაზია და ა.შ.")}</div>
-            {pair("terms", "termsKa", "წესები და პირობები", { rows: 12, hint: "აბზაცები ცარიელი ხაზით; სათაური ხაზის დასაწყისში „## “" })}
-            {pair("privacy", "privacyKa", "კონფიდენციალურობის პოლიტიკა", { rows: 12, hint: "აბზაცები ცარიელი ხაზით; სათაური ხაზის დასაწყისში „## “" })}
+            <div className="max-w-xl">{image("pageBanner", "Inner page banner background", "aspect-[4/1]", "Shown behind the page title: About us, Contact, Shop, etc.")}</div>
+            {pair("terms", "termsKa", "Terms & conditions", { rows: 12, hint: "Paragraphs separated by an empty line; start a line with “## ” for a heading" })}
+            {pair("privacy", "privacyKa", "Privacy policy", { rows: 12, hint: "Paragraphs separated by an empty line; start a line with “## ” for a heading" })}
           </>
         )}
       </section>
 
       <div className="sticky bottom-0 mt-5 flex flex-wrap items-center gap-3 border-t border-zinc-200 bg-zinc-50/95 py-4 backdrop-blur">
         <button type="button" onClick={save} disabled={pending} className="admin-btn">
-          {pending ? "ინახება..." : "შენახვა"}
+          {pending ? "Saving..." : "Save"}
         </button>
         {message && <p className={`text-sm ${message.ok ? "text-green-700" : "text-red-600"}`}>{message.text}</p>}
-        <span className="text-xs text-zinc-500">ყველა ჩანართი ერთად ინახება</span>
+        <span className="text-xs text-zinc-500">All tabs are saved together</span>
       </div>
     </div>
   );
