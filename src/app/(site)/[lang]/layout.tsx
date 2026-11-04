@@ -7,7 +7,6 @@ import { CartNotice } from "@/components/site/CartNotice";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { LangProvider } from "@/components/site/lang";
-import { NewsletterPopup } from "@/components/site/NewsletterPopup";
 import { RevealObserver } from "@/components/site/RevealObserver";
 import { StoreProvider } from "@/components/site/store";
 import { SiteInfoProvider } from "@/components/site/SiteInfo";
@@ -52,7 +51,6 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[la
             </main>
             <Footer lang={lang} info={info} />
             <CartNotice />
-            <NewsletterPopup />
             <RevealObserver />
           </StoreProvider>
           </SiteInfoProvider>
