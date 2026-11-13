@@ -5,7 +5,7 @@ import { pick, type Lang } from "@/lib/i18n";
 export const CATALOG_TAG = "catalog";
 
 /** type "color" shows round swatches; colors maps value -> hex; images maps value -> its own gallery */
-export type Attribute = { name: string; nameKa?: string; values: string[]; type?: "color"; colors?: Record<string, string>; images?: Record<string, string[]> };
+export type Attribute = { name: string; nameKa?: string; values: string[]; valuesKa?: Record<string, string>; type?: "color"; colors?: Record<string, string>; images?: Record<string, string[]> };
 
 export type Variation = {
   id: number;
@@ -142,13 +142,13 @@ function toDetail(row: ProductRow, lang: Lang): ProductDetail {
     description: pick(lang, row.description ?? "", row.descriptionKa) || null,
     variations: row.variations.map((v) => ({
       id: v.id,
-      name: variationName(v),
+      name: pick(lang, variationName(v), v.nameKa),
       color: v.color,
       images: variationImages(v),
       options: parseJson<Record<string, string>>(v.options, {}),
       specs: extra.flatMap((a) => {
         const value = parseJson<Record<string, string>>(v.options, {})[a.name];
-        return value ? [{ label: pick(lang, a.name, a.nameKa), value }] : [];
+        return value ? [{ label: pick(lang, a.name, a.nameKa), value: pick(lang, value, a.valuesKa?.[value]) }] : [];
       }),
       sku: v.sku,
       price: v.price,
@@ -243,18 +243,19 @@ export async function getAttributeFilters(): Promise<Attribute[]> {
   cacheLife("max");
   cacheTag(CATALOG_TAG);
   const rows = await db.product.findMany({ where: { status: "published" }, select: { attributes: true } });
-  const map = new Map<string, { values: Set<string>; colors: Record<string, string>; nameKa?: string }>();
+  const map = new Map<string, { values: Set<string>; colors: Record<string, string>; nameKa?: string; valuesKa: Record<string, string> }>();
   for (const r of rows) {
     for (const a of parseJson<Attribute[]>(r.attributes, [])) {
-      const entry = map.get(a.name) ?? { values: new Set<string>(), colors: {} };
+      const entry = map.get(a.name) ?? { values: new Set<string>(), colors: {}, valuesKa: {} };
       a.values.forEach((v) => entry.values.add(v));
       if (a.type === "color") Object.assign(entry.colors, a.colors);
       if (a.nameKa) entry.nameKa = a.nameKa;
+      Object.assign(entry.valuesKa, a.valuesKa);
       map.set(a.name, entry);
     }
   }
-  return [...map].map(([name, { values, colors, nameKa }]) =>
-    Object.keys(colors).length ? { name, nameKa, values: [...values], type: "color" as const, colors } : { name, nameKa, values: [...values] },
+  return [...map].map(([name, { values, colors, nameKa, valuesKa }]) =>
+    Object.keys(colors).length ? { name, nameKa, valuesKa, values: [...values], type: "color" as const, colors } : { name, nameKa, valuesKa, values: [...values] },
   );
 }
 

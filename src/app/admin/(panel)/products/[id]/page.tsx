@@ -57,6 +57,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
             return {
               id: v.id,
               name: variationName(v),
+              nameKa: v.nameKa ?? "",
               color: v.color ?? "",
               sku: v.sku ?? "",
               price: inherits ? "" : fromCents(v.price),

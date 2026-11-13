@@ -61,6 +61,7 @@ export async function uploadImages(formData: FormData): Promise<{ urls: string[]
 export type VariationInput = {
   id?: number;
   name: string;
+  nameKa: string;
   color: string;
   sku: string;
   price: string;
@@ -127,10 +128,14 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
         return val && parseJson<string[]>(a.values, []).includes(val) ? [[a.name, val]] : [];
       }),
     );
+    const kaOf = (attr: string, val: string) => parseJson<Record<string, string>>(globalAttrs.find((a) => a.name === attr)?.valuesKa, {})[val] || val;
+    const autoKa = Object.entries(options).map(([attr, val]) => kaOf(attr, val)).join(" / ");
     return {
       ...v,
       options,
       name: v.name.trim() || Object.values(options).join(" / ") || `#${i + 1}`,
+      // Empty Georgian name: built from the picked values' Georgian translations
+      nameKa: (v.nameKa ?? "").trim() || (v.name.trim() ? "" : autoKa) || null,
       color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : null,
       images: urls(v.images),
     };
@@ -142,6 +147,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
         {
           name: attrName,
           values: [...new Set(cleaned.map((v) => v.name))],
+          valuesKa: Object.fromEntries(cleaned.filter((v) => v.nameKa).map((v) => [v.name, v.nameKa!])),
           ...(attrName === "Color" ? { type: "color" as const, colors: Object.fromEntries(cleaned.filter((v) => v.color).map((v) => [v.name, v.color!])) } : {}),
         },
       ]
@@ -149,7 +155,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   // Each admin attribute used by a variation becomes a shop filter too
   for (const a of globalAttrs) {
     const values = [...new Set(cleaned.flatMap((v) => (v.options[a.name] ? [v.options[a.name]] : [])))];
-    if (values.length && a.name !== attrName) attributes.push({ name: a.name, nameKa: a.nameKa ?? undefined, values });
+    if (values.length && a.name !== attrName) attributes.push({ name: a.name, nameKa: a.nameKa ?? undefined, values, valuesKa: parseJson<Record<string, string>>(a.valuesKa, {}) });
   }
 
   const variations = cleaned.map((v, i) => {
@@ -157,6 +163,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
     return {
       id: v.id,
       name: v.name,
+      nameKa: v.nameKa,
       color: v.color,
       images: JSON.stringify(v.images),
       image: v.images[0] ?? null,
@@ -243,7 +250,7 @@ export async function duplicateProduct(id: number) {
       attributes: p.attributes,
       categories: { connect: p.categories.map((c) => ({ id: c.id })) },
       images: { create: p.images.map(({ url, sortOrder }) => ({ url, sortOrder })) },
-      variations: { create: p.variations.map(({ options, price, salePrice, stock, image, sortOrder }) => ({ options, price, salePrice, stock, image, sortOrder })) },
+      variations: { create: p.variations.map(({ name, nameKa, color, images, options, price, salePrice, stock, image, sortOrder }) => ({ name, nameKa, color, images, options, price, salePrice, stock, image, sortOrder })) },
     },
   });
   updateTag(CATALOG_TAG);
@@ -252,7 +259,7 @@ export async function duplicateProduct(id: number) {
 
 // ---------- Attributes ----------
 
-export type AttributeInput = { id?: number; name: string; nameKa: string; values: string[] };
+export type AttributeInput = { id?: number; name: string; nameKa: string; values: string[]; valuesKa: Record<string, string> };
 
 export async function saveAttribute(input: AttributeInput): Promise<{ ok: boolean; message: string }> {
   await requireAdmin();
@@ -261,9 +268,16 @@ export async function saveAttribute(input: AttributeInput): Promise<{ ok: boolea
   const values = [...new Set(input.values.map((v) => v.trim()).filter(Boolean))];
   const clash = await db.productAttribute.findUnique({ where: { name }, select: { id: true } });
   if (clash && clash.id !== input.id) return { ok: false, message: `"${name}" already exists` };
-  const data = { name, nameKa: input.nameKa.trim() || null, values: JSON.stringify(values) };
+  const valuesKa = Object.fromEntries(values.flatMap((v) => (input.valuesKa?.[v]?.trim() ? [[v, input.valuesKa[v].trim()]] : [])));
+  const data = { name, nameKa: input.nameKa.trim() || null, values: JSON.stringify(values), valuesKa: JSON.stringify(valuesKa) };
   if (input.id) await db.productAttribute.update({ where: { id: input.id }, data });
   else await db.productAttribute.create({ data });
+  // Products keep a copy of the labels for the shop; refresh it so new translations show without re-saving products
+  const products = await db.product.findMany({ where: { attributes: { contains: JSON.stringify(name) } }, select: { id: true, attributes: true } });
+  for (const p of products) {
+    const list = parseJson<Attribute[]>(p.attributes, []).map((a) => (a.name === name ? { ...a, nameKa: data.nameKa ?? undefined, valuesKa } : a));
+    await db.product.update({ where: { id: p.id }, data: { attributes: JSON.stringify(list) } });
+  }
   updateTag(CATALOG_TAG);
   refresh();
   return { ok: true, message: "Saved" };

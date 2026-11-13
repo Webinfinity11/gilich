@@ -3,14 +3,14 @@
 import { useState, useTransition } from "react";
 import { deleteAttribute, saveAttribute, type AttributeInput } from "@/app/admin/actions";
 
-const blank = (): AttributeInput => ({ name: "", nameKa: "", values: [] });
+const blank = (): AttributeInput => ({ name: "", nameKa: "", values: [], valuesKa: {} });
 
 /** Attributes like "Carat" with their values; values are then picked on each product variation */
 export function AttributesEditor({ attributes }: { attributes: (AttributeInput & { id: number })[] }) {
   return (
     <div className="grid items-start gap-6 lg:grid-cols-2">
       {attributes.map((a) => (
-        <AttributeCard key={`${a.id}-${a.name}-${a.values.join("|")}`} initial={a} />
+        <AttributeCard key={`${a.id}-${a.name}-${JSON.stringify([a.values, a.valuesKa])}`} initial={a} />
       ))}
       <AttributeCard key={`new-${attributes.length}`} initial={blank()} />
     </div>
@@ -60,17 +60,32 @@ function AttributeCard({ initial }: { initial: AttributeInput }) {
 
       <div>
         <p className="text-sm font-medium">Values</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 space-y-2">
+          {a.values.length > 0 && (
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2 text-xs text-zinc-500">
+              <span>English</span>
+              <span>Georgian (if empty, English is shown)</span>
+              <span className="w-[76px]" />
+            </div>
+          )}
           {a.values.map((v, i) => (
-            <span key={v} className="inline-flex items-center gap-1 rounded-full bg-zinc-100 py-1 pl-3 pr-1 text-sm ring-1 ring-zinc-200">
-              {v}
-              <button type="button" onClick={() => i > 0 && setA({ ...a, values: swap(a.values, i, i - 1) })} disabled={i === 0} className="px-1 text-zinc-500 disabled:opacity-30" aria-label="Move left">
-                ←
-              </button>
-              <button type="button" onClick={() => setA({ ...a, values: a.values.filter((x) => x !== v) })} className="flex size-6 items-center justify-center rounded-full text-zinc-500 hover:bg-red-50 hover:text-red-600" aria-label={`Remove ${v}`}>
-                ×
-              </button>
-            </span>
+            <div key={v} className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+              <span className="truncate rounded-lg bg-zinc-100 px-3 py-2 text-sm ring-1 ring-zinc-200">{v}</span>
+              <input
+                value={a.valuesKa[v] ?? ""}
+                onChange={(e) => setA({ ...a, valuesKa: { ...a.valuesKa, [v]: e.target.value } })}
+                placeholder={v}
+                className="admin-input min-w-0"
+              />
+              <div className="flex w-[76px] gap-1">
+                <button type="button" onClick={() => setA({ ...a, values: swap(a.values, i, i - 1) })} disabled={i === 0} className="flex size-9 items-center justify-center rounded-lg border border-zinc-300 text-zinc-600 disabled:opacity-30" aria-label="Move up">
+                  ↑
+                </button>
+                <button type="button" onClick={() => setA({ ...a, values: a.values.filter((x) => x !== v) })} className="flex size-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50" aria-label={`Remove ${v}`}>
+                  ×
+                </button>
+              </div>
+            </div>
           ))}
           {!a.values.length && <span className="text-sm text-zinc-500">No values yet</span>}
         </div>
@@ -84,7 +99,7 @@ function AttributeCard({ initial }: { initial: AttributeInput }) {
                 addValues();
               }
             }}
-            placeholder="New value, e.g. 0.5 (comma for several)"
+            placeholder="New value in English, e.g. 0.5 (comma for several)"
             className="admin-input min-w-0 flex-1"
           />
           <button type="button" onClick={addValues} className="admin-btn-ghost">

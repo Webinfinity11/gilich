@@ -15,7 +15,7 @@ export default async function AttributesPage() {
         Create an attribute (e.g. Carat) and its values. In a product, each variation then gets a field to pick the value.
       </p>
       <div className="mt-6">
-        <AttributesEditor attributes={rows.map((r) => ({ id: r.id, name: r.name, nameKa: r.nameKa ?? "", values: parseJson<string[]>(r.values, []) }))} />
+        <AttributesEditor attributes={rows.map((r) => ({ id: r.id, name: r.name, nameKa: r.nameKa ?? "", values: parseJson<string[]>(r.values, []), valuesKa: parseJson<Record<string, string>>(r.valuesKa, {}) }))} />
       </div>
     </div>
   );

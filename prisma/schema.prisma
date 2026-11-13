@@ -62,6 +62,8 @@ model ProductVariation {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   /// Shown on the site, e.g. "01 Bubble Gum" or "Rose Gold"
   name      String  @default("")
+  /// Georgian name; empty = English name
+  nameKa    String?
   /// Swatch colour (#rrggbb), optional
   color     String?
   /// JSON list of photo URLs; first is the main photo
@@ -142,6 +144,8 @@ model ProductAttribute {
   nameKa    String?
   /// JSON list of values, e.g. ["0.5", "1", "1.5"]
   values    String   @default("[]")
+  /// JSON map English value -> Georgian, e.g. { "White gold": "თეთრი ოქრო" }
+  valuesKa  String   @default("{}")
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 }

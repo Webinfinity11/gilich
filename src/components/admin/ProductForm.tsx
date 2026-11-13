@@ -10,7 +10,7 @@ import { ImageUploader } from "./ImageUploader";
 type Category = { id: number; name: string; parentId: number | null };
 type AttributeDef = { name: string; values: string[] };
 
-const emptyVariation = (): VariationInput => ({ name: "", color: "", sku: "", price: "", salePrice: "", stock: "", inStock: true, images: [], options: {} });
+const emptyVariation = (): VariationInput => ({ name: "", nameKa: "", color: "", sku: "", price: "", salePrice: "", stock: "", inStock: true, images: [], options: {} });
 
 export function ProductForm({ initial, categories, attributes, saved }: { initial: ProductInput; categories: Category[]; attributes: AttributeDef[]; saved?: boolean }) {
   const router = useRouter();
@@ -176,7 +176,7 @@ export function ProductForm({ initial, categories, attributes, saved }: { initia
                 attributes={attributes}
                 onChange={(patch) => setVar(i, patch)}
                 onMove={(to) => moveVar(i, to)}
-                onDuplicate={() => setVariations((list) => [...list.slice(0, i + 1), { ...v, id: undefined, name: `${v.name} (copy)`, sku: "" }, ...list.slice(i + 1)])}
+                onDuplicate={() => setVariations((list) => [...list.slice(0, i + 1), { ...v, id: undefined, name: `${v.name} (copy)`, nameKa: v.nameKa ? `${v.nameKa} (ასლი)` : "", sku: "" }, ...list.slice(i + 1)])}
                 onRemove={() => setVariations((list) => list.filter((_, j) => j !== i))}
                 onError={(text) => setMessage({ ok: false, text })}
               />
@@ -328,6 +328,10 @@ function VariationCard({
           Remove colour
         </button>
       )}
+      <label className="mt-3 block text-xs text-zinc-600">
+        Name (Georgian) <span className="text-zinc-400">(if empty, the English name is shown)</span>
+        <input value={v.nameKa} onChange={(e) => onChange({ nameKa: e.target.value })} placeholder="მაგ. ვარდისფერი ოქრო" className="admin-input mt-1" />
+      </label>
 
       {attributes.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
