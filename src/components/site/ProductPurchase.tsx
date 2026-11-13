@@ -26,8 +26,9 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
   const hasVariations = product.variations.length > 0;
   const variation = product.variations.find((v) => v.id === selectedId) ?? null;
 
-  // The selected variation's own gallery replaces the product photos
-  const gallery = variation?.images.length ? variation.images : product.images;
+  // A picked variation is shown as its own product: its photos only (none = "no photo"), its title and price
+  const gallery = variation ? variation.images : product.images;
+  const title = variation ? `${product.name} – ${variation.name}` : product.name;
   const mainImage = gallery[imageIndex] ?? gallery[0];
 
   const stock = variation ? variation.stock : product.stock;
@@ -50,7 +51,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
         slug: product.slug,
         name: product.name,
         variation: variation?.name ?? null,
-        image: gallery[0] ?? null,
+        image: gallery[0] ?? product.images[0] ?? null,
         price: priced.salePrice !== null && priced.salePrice < priced.price ? priced.salePrice : priced.price,
       },
       qty,
@@ -60,7 +61,16 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
   return (
     <div className="grid gap-10 lg:grid-cols-2 lg:gap-[30px]">
       <div>
-        {mainImage ? <ZoomImage src={mainImage} alt={product.name} /> : <div className="aspect-square border border-line bg-[#f6f6f6]" />}
+        {mainImage ? (
+          <ZoomImage key={mainImage} src={mainImage} alt={title} />
+        ) : (
+          <div className="flex aspect-square flex-col items-center justify-center gap-3 border border-line bg-[#f6f6f6] text-muted">
+            <svg viewBox="0 0 24 24" className="size-12" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinejoin="round" aria-hidden>
+              <path d="M4 5h16v14H4zM4 15l5-5 4 4 3-3 4 4M3 3l18 18" />
+            </svg>
+            <span className="text-sm">{t.product.noPhoto}</span>
+          </div>
+        )}
         {gallery.length > 1 && (
           <div className="mt-4 flex flex-wrap gap-5">
             {gallery.map((src, i) => (
@@ -79,7 +89,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
       </div>
 
       <div>
-        <h1 className="text-[28px] text-ink md:text-[32px]">{product.name}</h1>
+        <h1 className="text-[28px] text-ink md:text-[32px]">{title}</h1>
         <div className="mt-2 text-[28px] font-medium text-ink">
           {variation ? (
             variation.salePrice !== null && variation.salePrice < variation.price ? (

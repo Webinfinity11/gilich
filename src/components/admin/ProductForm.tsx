@@ -159,7 +159,7 @@ export function ProductForm({ initial, categories, attributes, saved }: { initia
         <section className="admin-card p-5">
           <h2 className="font-semibold">Variations ({p.variations.length})</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Empty price = product price. Empty stock = not tracked. If a variation has no images, the product images are shown.{" "}
+            Empty price = product price. Empty stock = not tracked. On the site a picked variation shows its own title, price and photos; with no photos it shows "No photo yet".{" "}
             <Link href="/admin/attributes" className="text-blue-700 hover:underline">
               Manage attributes (e.g. Carat)
             </Link>
