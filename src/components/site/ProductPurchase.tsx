@@ -28,7 +28,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
 
   // A picked variation is shown as its own product: its photos only (none = "no photo"), its title and price
   const gallery = variation ? variation.images : product.images;
-  const title = variation ? `${product.name} – ${variation.name}` : product.name;
+  const title = variation ? variation.name : product.name;
   const mainImage = gallery[imageIndex] ?? gallery[0];
 
   const stock = variation ? variation.stock : product.stock;
