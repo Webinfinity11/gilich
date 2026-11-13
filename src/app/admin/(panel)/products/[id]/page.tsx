@@ -49,6 +49,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
           status: product.status === "draft" ? "draft" : "published",
           featured: product.featured,
           categoryIds: product.categories.map((c) => c.id),
+          options: parseJson<Record<string, string>>(product.options, {}),
           images: product.images.map((i) => i.url),
           variations: product.variations.map((v) => {
             // Same price and sale as the product = "no own price" (empty field)

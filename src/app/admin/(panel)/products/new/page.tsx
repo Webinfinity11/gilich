@@ -36,6 +36,7 @@ export default async function NewProductPage() {
           status: "published",
           featured: false,
           categoryIds: [],
+          options: {},
           images: [],
           variations: [],
         }}

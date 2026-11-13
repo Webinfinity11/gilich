@@ -31,6 +31,8 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
   const mainImage = gallery[imageIndex] ?? gallery[0];
 
   const stock = variation ? variation.stock : product.stock;
+  // Main product's attributes, overridden by the picked variation's
+  const specs = variation ? [...product.specs.filter((s) => !variation.specs.some((x) => x.label === s.label)), ...variation.specs] : product.specs;
   const outOfStock = stock !== null && stock <= 0;
 
   /** Clicking the picked variation again (or "clear") goes back to the main product */
@@ -94,6 +96,17 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
         </div>
         {product.shortDescription && <p className="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-muted">{product.shortDescription}</p>}
 
+        {specs.length > 0 && (
+          <dl className="mt-4 space-y-1 text-[15px]">
+            {specs.map((s) => (
+              <div key={s.label} className="flex gap-2">
+                <dt className="text-muted">{s.label}:</dt>
+                <dd className="text-ink">{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
         <div className="mt-6 border-t border-line pt-6">
           {hasVariations && (
             <div className="mb-5">
@@ -133,16 +146,6 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                   );
                 })}
               </div>
-              {variation && variation.specs.length > 0 && (
-                <dl className="mt-3 space-y-1 text-sm">
-                  {variation.specs.map((s) => (
-                    <div key={s.label} className="flex gap-2">
-                      <dt className="text-muted">{s.label}:</dt>
-                      <dd className="text-ink">{s.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
               {variation && (
                 <button type="button" onClick={() => choose(null)} className="mt-3 inline-flex items-center gap-1 text-sm text-muted underline-offset-4 hover:text-ink hover:underline">
                   <span aria-hidden>×</span> {t.product.clear}

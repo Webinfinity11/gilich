@@ -40,6 +40,8 @@ export type ProductCard = {
 };
 
 export type ProductDetail = ProductCard & {
+  /** Main product's admin attribute values, localised */
+  specs: { label: string; value: string }[];
   sku: string | null;
   stock: number | null;
   shortDescription: string | null;
@@ -133,11 +135,18 @@ function toCard(row: ProductRow, lang: Lang): ProductCard {
 
 function toDetail(row: ProductRow, lang: Lang): ProductDetail {
   // The first attribute (Color / Variant) is the variation name itself; the rest are admin attributes
-  const [, ...extra] = parseJson<Attribute[]>(row.attributes, []);
+  const all = parseJson<Attribute[]>(row.attributes, []);
+  const extra = row.variations.length ? all.slice(1) : all;
+  const specsOf = (options: string) =>
+    extra.flatMap((a) => {
+      const value = parseJson<Record<string, string>>(options, {})[a.name];
+      return value ? [{ label: pick(lang, a.name, a.nameKa), value: pick(lang, value, a.valuesKa?.[value]) }] : [];
+    });
   return {
     ...toCard(row, lang),
     sku: row.sku,
     stock: row.stock,
+    specs: specsOf(row.options),
     shortDescription: pick(lang, row.shortDescription ?? "", row.shortDescriptionKa) || null,
     description: pick(lang, row.description ?? "", row.descriptionKa) || null,
     variations: row.variations.map((v) => ({
@@ -146,10 +155,7 @@ function toDetail(row: ProductRow, lang: Lang): ProductDetail {
       color: v.color,
       images: variationImages(v),
       options: parseJson<Record<string, string>>(v.options, {}),
-      specs: extra.flatMap((a) => {
-        const value = parseJson<Record<string, string>>(v.options, {})[a.name];
-        return value ? [{ label: pick(lang, a.name, a.nameKa), value: pick(lang, value, a.valuesKa?.[value]) }] : [];
-      }),
+      specs: specsOf(v.options),
       sku: v.sku,
       price: v.price,
       salePrice: v.salePrice,

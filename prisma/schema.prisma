@@ -41,6 +41,8 @@ model Product {
   featured           Boolean            @default(false)
   /// JSON: [{ "name": "Size", "values": ["6", "7"] }]
   attributes         String             @default("[]")
+  /// Main product's admin attribute values: { "Carat": "0.5" }
+  options            String             @default("{}")
   images             ProductImage[]
   variations         ProductVariation[]
   categories         Category[]

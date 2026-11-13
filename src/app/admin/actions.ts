@@ -91,6 +91,8 @@ export type ProductInput = {
   categoryIds: number[];
   images: string[];
   variations: VariationInput[];
+  /** Main product's attribute values: { Carat: "0.5" } */
+  options: Record<string, string>;
 };
 
 const intOrNull = (v: string) => (v.trim() === "" ? null : Math.max(0, Math.floor(Number(v)) || 0));
@@ -120,14 +122,17 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   const urls = (list: unknown) => (Array.isArray(list) ? list.filter((u): u is string => typeof u === "string" && u.length > 0) : []);
 
   const globalAttrs = await db.productAttribute.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
-  const cleaned = input.variations.map((v, i) => {
-    // Only values that still exist on the attribute are kept
-    const options = Object.fromEntries(
+  // Only values that still exist on the attribute are kept
+  const validOptions = (picked: Record<string, string> | undefined) =>
+    Object.fromEntries(
       globalAttrs.flatMap((a) => {
-        const val = (v.options ?? {})[a.name];
+        const val = (picked ?? {})[a.name];
         return val && parseJson<string[]>(a.values, []).includes(val) ? [[a.name, val]] : [];
       }),
     );
+  const mainOptions = validOptions(input.options);
+  const cleaned = input.variations.map((v, i) => {
+    const options = validOptions(v.options);
     const kaOf = (attr: string, val: string) => parseJson<Record<string, string>>(globalAttrs.find((a) => a.name === attr)?.valuesKa, {})[val] || val;
     const autoKa = Object.entries(options).map(([attr, val]) => kaOf(attr, val)).join(" / ");
     return {
@@ -154,7 +159,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
     : [];
   // Each admin attribute used by a variation becomes a shop filter too
   for (const a of globalAttrs) {
-    const values = [...new Set(cleaned.flatMap((v) => (v.options[a.name] ? [v.options[a.name]] : [])))];
+    const values = [...new Set([mainOptions, ...cleaned.map((v) => v.options)].flatMap((o) => (o[a.name] ? [o[a.name]] : [])))];
     if (values.length && a.name !== attrName) attributes.push({ name: a.name, nameKa: a.nameKa ?? undefined, values, valuesKa: parseJson<Record<string, string>>(a.valuesKa, {}) });
   }
 
@@ -193,6 +198,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
     status: input.status === "draft" ? "draft" : "published",
     featured: input.featured,
     attributes: JSON.stringify(attributes),
+    options: JSON.stringify(mainOptions),
   };
 
   const id = await db.$transaction(async (tx) => {
@@ -248,6 +254,7 @@ export async function duplicateProduct(id: number) {
       status: "draft",
       featured: false,
       attributes: p.attributes,
+      options: p.options,
       categories: { connect: p.categories.map((c) => ({ id: c.id })) },
       images: { create: p.images.map(({ url, sortOrder }) => ({ url, sortOrder })) },
       variations: { create: p.variations.map(({ name, nameKa, color, images, options, price, salePrice, stock, image, sortOrder }) => ({ name, nameKa, color, images, options, price, salePrice, stock, image, sortOrder })) },

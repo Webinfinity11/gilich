@@ -153,6 +153,7 @@ export function ProductForm({ initial, categories, attributes, saved }: { initia
                   <input value={p.sku} onChange={(e) => set("sku", e.target.value)} className="admin-input mt-1" />
                 </label>
           </div>
+          <AttributeSelects attributes={attributes} value={p.options} onChange={(options) => set("options", options)} />
         </section>
 
         <section className="admin-card p-5">
@@ -239,6 +240,37 @@ export function ProductForm({ initial, categories, attributes, saved }: { initia
         </section>
       </aside>
     </form>
+  );
+}
+
+/** One select per admin attribute (e.g. Carat); used for the main product and each variation */
+function AttributeSelects({ attributes, value, onChange }: { attributes: AttributeDef[]; value: Record<string, string>; onChange: (v: Record<string, string>) => void }) {
+  if (!attributes.length) return null;
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {attributes.map((a) => (
+        <label key={a.name} className="block text-xs text-zinc-600">
+          {a.name}
+          <select
+            value={value[a.name] ?? ""}
+            onChange={(e) => {
+              const next = { ...value };
+              if (e.target.value) next[a.name] = e.target.value;
+              else delete next[a.name];
+              onChange(next);
+            }}
+            className="admin-input mt-1"
+          >
+            <option value="">—</option>
+            {a.values.map((val) => (
+              <option key={val} value={val}>
+                {val}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+    </div>
   );
 }
 
@@ -333,32 +365,7 @@ function VariationCard({
         <input value={v.nameKa} onChange={(e) => onChange({ nameKa: e.target.value })} placeholder="მაგ. ვარდისფერი ოქრო" className="admin-input mt-1" />
       </label>
 
-      {attributes.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {attributes.map((a) => (
-            <label key={a.name} className="block text-xs text-zinc-600">
-              {a.name}
-              <select
-                value={v.options[a.name] ?? ""}
-                onChange={(e) => {
-                  const options = { ...v.options };
-                  if (e.target.value) options[a.name] = e.target.value;
-                  else delete options[a.name];
-                  onChange({ options });
-                }}
-                className="admin-input mt-1"
-              >
-                <option value="">—</option>
-                {a.values.map((val) => (
-                  <option key={val} value={val}>
-                    {val}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
-        </div>
-      )}
+      <AttributeSelects attributes={attributes} value={v.options} onChange={(options) => onChange({ options })} />
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="block text-xs text-zinc-600">
