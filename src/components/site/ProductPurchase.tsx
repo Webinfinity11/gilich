@@ -121,7 +121,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
           {hasVariations && (
             <div className="mb-5">
               <p className="mb-2 text-sm uppercase text-ink">
-                {t.product.option}
+                {product.variationLabel ?? t.product.option}
                 {variation && <span className="ml-2 normal-case text-muted">{variation.name}</span>}
               </p>
               <div className="flex flex-wrap gap-2">

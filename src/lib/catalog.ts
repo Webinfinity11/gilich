@@ -42,6 +42,8 @@ export type ProductCard = {
 export type ProductDetail = ProductCard & {
   /** Main product's admin attribute values, localised */
   specs: { label: string; value: string }[];
+  /** Heading over the variation picker: the attribute(s) the variations use, e.g. "Carat"; null = generic "Variation" */
+  variationLabel: string | null;
   sku: string | null;
   stock: number | null;
   shortDescription: string | null;
@@ -147,6 +149,11 @@ function toDetail(row: ProductRow, lang: Lang): ProductDetail {
     sku: row.sku,
     stock: row.stock,
     specs: specsOf(row.options),
+    variationLabel:
+      extra
+        .filter((a) => row.variations.some((v) => parseJson<Record<string, string>>(v.options, {})[a.name]))
+        .map((a) => pick(lang, a.name, a.nameKa))
+        .join(" / ") || null,
     shortDescription: pick(lang, row.shortDescription ?? "", row.shortDescriptionKa) || null,
     description: pick(lang, row.description ?? "", row.descriptionKa) || null,
     variations: row.variations.map((v) => ({
