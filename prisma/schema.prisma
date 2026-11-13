@@ -134,3 +134,14 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+/// Global attribute managed in the admin (e.g. Carat), values picked per variation
+model ProductAttribute {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  nameKa    String?
+  /// JSON list of values, e.g. ["0.5", "1", "1.5"]
+  values    String   @default("[]")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}

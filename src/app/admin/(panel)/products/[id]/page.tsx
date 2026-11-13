@@ -12,12 +12,13 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   await requireAdmin();
   const id = Number((await params).id);
   const saved = (await searchParams).saved === "1";
-  const [product, categories] = await Promise.all([
+  const [product, categories, attributes] = await Promise.all([
     db.product.findUnique({
       where: { id },
       include: { images: { orderBy: { sortOrder: "asc" } }, categories: { select: { id: true } }, variations: { orderBy: { sortOrder: "asc" } } },
     }),
     db.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, parentId: true } }),
+    db.productAttribute.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
   ]);
   if (!product) notFound();
 
@@ -30,6 +31,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
       <ProductForm
         key={product.updatedAt.toISOString()}
         categories={categories}
+        attributes={attributes.map((a) => ({ name: a.name, values: parseJson<string[]>(a.values, []) }))}
         saved={saved}
         initial={{
           id: product.id,
@@ -62,6 +64,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
               stock: v.stock === null || v.stock === 0 ? "" : String(v.stock),
               inStock: v.stock !== 0,
               images: images.length ? images : v.image ? [v.image] : [],
+              options: parseJson<Record<string, string>>(v.options, {}),
             };
           }),
         }}

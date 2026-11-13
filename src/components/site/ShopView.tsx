@@ -1,6 +1,6 @@
 import type { Attribute, CategoryNode, ProductCard, SortKey } from "@/lib/catalog";
 import { sortProducts } from "@/lib/catalog";
-import { getDict, localePath, type Lang } from "@/lib/i18n";
+import { getDict, localePath, pick, type Lang } from "@/lib/i18n";
 import { formatPrice } from "@/lib/money";
 import { LLink as Link } from "./LLink";
 import { ShopGrid } from "./ShopGrid";
@@ -131,7 +131,7 @@ export function ShopView({
           const current = list(params[`filter_${attr.name}`]);
           return (
             <div key={attr.name}>
-              <h3 className="mb-5 text-xl uppercase text-ink">{attr.name}</h3>
+              <h3 className="mb-5 text-xl uppercase text-ink">{pick(lang, attr.name, attr.nameKa)}</h3>
               <div className="flex flex-wrap gap-2">
                 {attr.values.map((v) => (
                   <Link

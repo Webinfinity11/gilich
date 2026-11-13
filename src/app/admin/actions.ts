@@ -5,7 +5,7 @@ import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createSessionToken, safeEqual, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth";
-import { CATALOG_TAG, type Attribute } from "@/lib/catalog";
+import { CATALOG_TAG, parseJson, type Attribute } from "@/lib/catalog";
 import { CONTENT_TAG, type HeroSlideInput } from "@/lib/content";
 import { defaultSettings, type SiteSettingsInput } from "@/lib/settings";
 import { db } from "@/lib/db";
@@ -68,6 +68,8 @@ export type VariationInput = {
   stock: string;
   inStock: boolean;
   images: string[];
+  /** Picked attribute values, keyed by attribute name: { Carat: "0.5" } */
+  options: Record<string, string>;
 };
 
 export type ProductInput = {
@@ -116,12 +118,23 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
   const productSale = toCents(input.salePrice);
   const urls = (list: unknown) => (Array.isArray(list) ? list.filter((u): u is string => typeof u === "string" && u.length > 0) : []);
 
-  const cleaned = input.variations.map((v, i) => ({
-    ...v,
-    name: v.name.trim() || `#${i + 1}`,
-    color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : null,
-    images: urls(v.images),
-  }));
+  const globalAttrs = await db.productAttribute.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+  const cleaned = input.variations.map((v, i) => {
+    // Only values that still exist on the attribute are kept
+    const options = Object.fromEntries(
+      globalAttrs.flatMap((a) => {
+        const val = (v.options ?? {})[a.name];
+        return val && parseJson<string[]>(a.values, []).includes(val) ? [[a.name, val]] : [];
+      }),
+    );
+    return {
+      ...v,
+      options,
+      name: v.name.trim() || Object.values(options).join(" / ") || `#${i + 1}`,
+      color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : null,
+      images: urls(v.images),
+    };
+  });
   // Variations are stored as one attribute ("Color" when they have swatches) so shop filters and card dots keep working
   const attrName = cleaned.some((v) => v.color) ? "Color" : "Variant";
   const attributes: Attribute[] = cleaned.length
@@ -133,6 +146,11 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
         },
       ]
     : [];
+  // Each admin attribute used by a variation becomes a shop filter too
+  for (const a of globalAttrs) {
+    const values = [...new Set(cleaned.flatMap((v) => (v.options[a.name] ? [v.options[a.name]] : [])))];
+    if (values.length && a.name !== attrName) attributes.push({ name: a.name, nameKa: a.nameKa ?? undefined, values });
+  }
 
   const variations = cleaned.map((v, i) => {
     const own = toCents(v.price);
@@ -142,7 +160,7 @@ export async function saveProduct(input: ProductInput): Promise<{ ok: boolean; m
       color: v.color,
       images: JSON.stringify(v.images),
       image: v.images[0] ?? null,
-      options: JSON.stringify({ [attrName]: v.name }),
+      options: JSON.stringify({ ...v.options, [attrName]: v.name }),
       sku: v.sku.trim() || null,
       price: own ?? price,
       // No own price: the product price and its sale apply
@@ -230,6 +248,32 @@ export async function duplicateProduct(id: number) {
   });
   updateTag(CATALOG_TAG);
   redirect(`/admin/products/${copy.id}`);
+}
+
+// ---------- Attributes ----------
+
+export type AttributeInput = { id?: number; name: string; nameKa: string; values: string[] };
+
+export async function saveAttribute(input: AttributeInput): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  const name = input.name.trim();
+  if (!name) return { ok: false, message: "Enter an attribute name" };
+  const values = [...new Set(input.values.map((v) => v.trim()).filter(Boolean))];
+  const clash = await db.productAttribute.findUnique({ where: { name }, select: { id: true } });
+  if (clash && clash.id !== input.id) return { ok: false, message: `"${name}" already exists` };
+  const data = { name, nameKa: input.nameKa.trim() || null, values: JSON.stringify(values) };
+  if (input.id) await db.productAttribute.update({ where: { id: input.id }, data });
+  else await db.productAttribute.create({ data });
+  updateTag(CATALOG_TAG);
+  refresh();
+  return { ok: true, message: "Saved" };
+}
+
+export async function deleteAttribute(id: number) {
+  await requireAdmin();
+  await db.productAttribute.delete({ where: { id } });
+  updateTag(CATALOG_TAG);
+  refresh();
 }
 
 // ---------- Categories ----------

@@ -8,10 +8,11 @@ import { slugify } from "@/lib/slug";
 import { ImageUploader } from "./ImageUploader";
 
 type Category = { id: number; name: string; parentId: number | null };
+type AttributeDef = { name: string; values: string[] };
 
-const emptyVariation = (): VariationInput => ({ name: "", color: "", sku: "", price: "", salePrice: "", stock: "", inStock: true, images: [] });
+const emptyVariation = (): VariationInput => ({ name: "", color: "", sku: "", price: "", salePrice: "", stock: "", inStock: true, images: [], options: {} });
 
-export function ProductForm({ initial, categories, saved }: { initial: ProductInput; categories: Category[]; saved?: boolean }) {
+export function ProductForm({ initial, categories, attributes, saved }: { initial: ProductInput; categories: Category[]; attributes: AttributeDef[]; saved?: boolean }) {
   const router = useRouter();
   const [p, setP] = useState<ProductInput>(initial);
   const [slugTouched, setSlugTouched] = useState(!!initial.id);
@@ -136,7 +137,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
           <p className="mt-1 text-sm text-zinc-500">The site first shows the main product with this price and the images above. Choosing a variation switches the price and images.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-4">
             <label className="block text-sm font-medium">
-              Price ($) *
+              Price (₾) *
               <input type="number" step="0.01" min="0" required value={p.price} onChange={(e) => set("price", e.target.value)} className="admin-input mt-1" />
             </label>
             <label className="block text-sm font-medium">
@@ -155,9 +156,12 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
         </section>
 
         <section className="admin-card p-5">
-          <h2 className="font-semibold">Colours / variations ({p.variations.length})</h2>
+          <h2 className="font-semibold">Variations ({p.variations.length})</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Empty price = product price. Empty stock = not tracked. If a variation has no images, the product images are shown.
+            Empty price = product price. Empty stock = not tracked. If a variation has no images, the product images are shown.{" "}
+            <Link href="/admin/attributes" className="text-blue-700 hover:underline">
+              Manage attributes (e.g. Carat)
+            </Link>
           </p>
 
           <div className="mt-4 space-y-4">
@@ -169,6 +173,7 @@ export function ProductForm({ initial, categories, saved }: { initial: ProductIn
                 v={v}
                 productPrice={p.price}
                 productImages={p.images}
+                attributes={attributes}
                 onChange={(patch) => setVar(i, patch)}
                 onMove={(to) => moveVar(i, to)}
                 onDuplicate={() => setVariations((list) => [...list.slice(0, i + 1), { ...v, id: undefined, name: `${v.name} (copy)`, sku: "" }, ...list.slice(i + 1)])}
@@ -245,6 +250,7 @@ function VariationCard({
   v,
   productPrice,
   productImages,
+  attributes,
   onChange,
   onMove,
   onDuplicate,
@@ -256,6 +262,7 @@ function VariationCard({
   v: VariationInput;
   productPrice: string;
   productImages: string[];
+  attributes: AttributeDef[];
   onChange: (patch: Partial<VariationInput>) => void;
   onMove: (to: number) => void;
   onDuplicate: () => void;
@@ -302,7 +309,7 @@ function VariationCard({
         >
           <input type="color" value={v.color || "#cccccc"} onChange={(e) => onChange({ color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" />
         </label>
-        <input value={v.name} onChange={(e) => onChange({ name: e.target.value })} placeholder="Name, e.g. Rose Gold" required className="admin-input min-w-0 flex-1 !py-2.5 font-semibold" />
+        <input value={v.name} onChange={(e) => onChange({ name: e.target.value })} placeholder={attributes.length ? "Name (optional if attributes are picked)" : "Name, e.g. Rose Gold"} required={!attributes.length} className="admin-input min-w-0 flex-1 !py-2.5 font-semibold" />
         <button type="button" onClick={() => onMove(index - 1)} disabled={index === 0} className={iconBtn} aria-label="Move up">
           ↑
         </button>
@@ -322,9 +329,36 @@ function VariationCard({
         </button>
       )}
 
+      {attributes.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {attributes.map((a) => (
+            <label key={a.name} className="block text-xs text-zinc-600">
+              {a.name}
+              <select
+                value={v.options[a.name] ?? ""}
+                onChange={(e) => {
+                  const options = { ...v.options };
+                  if (e.target.value) options[a.name] = e.target.value;
+                  else delete options[a.name];
+                  onChange({ options });
+                }}
+                className="admin-input mt-1"
+              >
+                <option value="">—</option>
+                {a.values.map((val) => (
+                  <option key={val} value={val}>
+                    {val}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+      )}
+
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="block text-xs text-zinc-600">
-          Price ($)
+          Price (₾)
           <input type="number" step="0.01" min="0" placeholder={productPrice || "Product price"} value={v.price} onChange={(e) => onChange({ price: e.target.value })} className="admin-input mt-1" />
         </label>
         <label className="block text-xs text-zinc-600">

@@ -25,7 +25,6 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
 
   const hasVariations = product.variations.length > 0;
   const variation = product.variations.find((v) => v.id === selectedId) ?? null;
-  const hasSwatches = product.variations.some((v) => v.color);
 
   // The selected variation's own gallery replaces the product photos
   const gallery = variation?.images.length ? variation.images : product.images;
@@ -99,7 +98,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
           {hasVariations && (
             <div className="mb-5">
               <p className="mb-2 text-sm uppercase text-ink">
-                {hasSwatches ? t.shop.color : t.product.option}
+                {t.product.option}
                 {variation && <span className="ml-2 normal-case text-muted">{variation.name}</span>}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -134,6 +133,16 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                   );
                 })}
               </div>
+              {variation && variation.specs.length > 0 && (
+                <dl className="mt-3 space-y-1 text-sm">
+                  {variation.specs.map((s) => (
+                    <div key={s.label} className="flex gap-2">
+                      <dt className="text-muted">{s.label}:</dt>
+                      <dd className="text-ink">{s.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
               {variation && (
                 <button type="button" onClick={() => choose(null)} className="mt-3 inline-flex items-center gap-1 text-sm text-muted underline-offset-4 hover:text-ink hover:underline">
                   <span aria-hidden>×</span> {t.product.clear}

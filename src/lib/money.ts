@@ -1,5 +1,5 @@
 export function formatPrice(cents: number) {
-  return `${(cents / 100).toFixed(2)}$`;
+  return `${(cents / 100).toFixed(2)} ₾`;
 }
 
 /** "100" / "100.50" -> cents */
