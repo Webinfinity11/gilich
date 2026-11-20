@@ -10,11 +10,14 @@ import { LandingDesignEditor } from "@/components/admin/LandingDesignEditor";
 import type { Landing, LandingSlide } from "@/lib/landing";
 import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 import { landingCopyFields } from "@/lib/landing-copy";
+import { LangSwitcher } from "@/components/site/LangSwitcher";
+import { pick, type Lang } from "@/lib/i18n";
 
 type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent" | "design" | "english">;
 const slideFields = { eyebrow: "Small heading", title: "Main heading", text: "Description", button: "Button text" } as const;
 
 export function LandingEditor({ initial, products }: { initial: Landing; products: { id: number; name: string; nameKa: string | null }[] }) {
+  const [productLanguage, setProductLanguage] = useState<Lang>("en");
   const [page, setPage] = useState(() => {
     const availableIds = new Set(products.map((product) => product.id));
     return { ...initial, productIds: initial.productIds.filter((id) => availableIds.has(id)).slice(0, LANDING_PRODUCT_LIMIT) };
@@ -114,7 +117,10 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
       ))}
     </section>
     <section className="admin-card space-y-4 p-6">
-      <h2 className="text-lg font-semibold">Products</h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold">Products</h2>
+        <LangSwitcher align="end" language={productLanguage} onSelect={setProductLanguage} />
+      </div>
       {field("productsTitle", "Section heading")}
       <label className="block max-w-64 space-y-1 text-sm font-medium">
         <span>Campaign discount (%)</span>
@@ -129,7 +135,7 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
           return (
             <label key={product.id} className="flex items-start gap-2 text-sm">
               <input type="checkbox" checked={checked} disabled={!checked && page.productIds.length >= LANDING_PRODUCT_LIMIT} onChange={(e) => toggleProduct(product.id, e.target.checked)} />
-              {product.nameKa || product.name}
+              <span lang={productLanguage === "en" ? "en" : "ka"}>{pick(productLanguage, product.name, product.nameKa)}</span>
             </label>
           );
         })}

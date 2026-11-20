@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { localePath, type Lang } from "@/lib/i18n";
+import { getDict, localePath, type Lang } from "@/lib/i18n";
 import { ChevronRight } from "./icons";
 import { useI18n } from "./lang";
 
@@ -9,8 +9,14 @@ const FLAGS: Record<Lang, string> = { en: "/media/ICON-1.png", "ka-ge": "/media/
 const CODES: Record<Lang, string> = { en: "EN", "ka-ge": "KA" };
 
 /** Animated language dropdown. `current` is the page path without the language prefix. */
-export function LangSwitcher({ current, align = "center" }: { current: string; align?: "center" | "start" }) {
-  const { t, lang } = useI18n();
+export function LangSwitcher({ align = "center", ...props }: {
+  align?: "center" | "start" | "end";
+} & ({ current: string; onSelect?: never; language?: never; pending?: never } | {
+  current?: never; onSelect: (lang: Lang) => void; language?: Lang; pending?: boolean;
+})) {
+  const { lang: currentLanguage } = useI18n();
+  const lang = props.language ?? currentLanguage;
+  const t = getDict(lang);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -38,6 +44,7 @@ export function LangSwitcher({ current, align = "center" }: { current: string; a
     <div ref={ref} className="relative">
       <button
         type="button"
+        disabled={props.pending}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
@@ -54,30 +61,37 @@ export function LangSwitcher({ current, align = "center" }: { current: string; a
         id={menuId}
         role="menu"
         className={`absolute top-full z-50 mt-3 min-w-[160px] origin-top border border-line bg-white py-1.5 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.3)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          align === "center" ? "left-1/2 -translate-x-1/2" : "left-0"
+          align === "center" ? "left-1/2 -translate-x-1/2" : align === "end" ? "right-0" : "left-0"
         } ${open ? "visible translate-y-0 scale-100 opacity-100" : "invisible -translate-y-2 scale-95 opacity-0"}`}
       >
         {options.map((o, i) => {
           const active = o.lang === lang;
+          const className = `flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition duration-300 hover:bg-panel ${
+            open ? "translate-x-0 opacity-100" : "-translate-x-1 opacity-0"
+          } ${active ? "font-medium text-ink" : "text-[#555] hover:text-ink"}`;
+          const content = (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={FLAGS[o.lang]} alt="" className="h-3 w-[18px] object-cover" />
+              <span className="flex-1">{o.label}</span>
+              {active && <span className="size-1.5 rounded-full bg-ink" />}
+            </>
+          );
+          const tabIndex = open ? 0 : -1;
+          const style = { transitionDelay: open ? `${60 + i * 50}ms` : "0ms" };
           return (
             <li key={o.lang} role="none">
-              {/* Plain <a>: switching language swaps <html lang>, so it needs a full page load */}
-              <a
-                role="menuitem"
-                href={localePath(o.lang, current)}
-                hrefLang={o.lang === "ka-ge" ? "ka" : "en"}
-                aria-current={active ? "true" : undefined}
-                tabIndex={open ? 0 : -1}
-                style={{ transitionDelay: open ? `${60 + i * 50}ms` : "0ms" }}
-                className={`flex items-center gap-3 px-4 py-2.5 text-sm transition duration-300 hover:bg-panel ${
-                  open ? "translate-x-0 opacity-100" : "-translate-x-1 opacity-0"
-                } ${active ? "font-medium text-ink" : "text-[#555] hover:text-ink"}`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={FLAGS[o.lang]} alt="" className="h-3 w-[18px] object-cover" />
-                <span className="flex-1">{o.label}</span>
-                {active && <span className="size-1.5 rounded-full bg-ink" />}
-              </a>
+              {props.onSelect ? (
+                <button type="button" role="menuitem" aria-current={active ? "true" : undefined} tabIndex={tabIndex}
+                  style={style} className={className} onClick={() => { setOpen(false); if (!active) props.onSelect?.(o.lang); }}>
+                  {content}
+                </button>
+              ) : (
+                <a role="menuitem" href={localePath(o.lang, props.current)} hrefLang={o.lang === "ka-ge" ? "ka" : "en"}
+                  aria-current={active ? "true" : undefined} tabIndex={tabIndex} style={style} className={className}>
+                  {content}
+                </a>
+              )}
             </li>
           );
         })}
