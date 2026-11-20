@@ -160,7 +160,7 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
           onChange={(event) => setPage((current) => ({ ...current, discountPercent: Number(event.target.value) }))} />
       </label>
       <p className="text-sm text-zinc-500">Applies to the current prices of the selected products in this campaign.</p>
-      <p className="text-sm text-zinc-500">Choose products to display in the scrolling row ({page.productIds.length} selected).</p>
+      <p className="text-sm text-zinc-500">Choose products to display in the grid ({page.productIds.length} selected).</p>
       <div className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-zinc-200 p-4 sm:grid-cols-2">
         {products.map((product) => {
           const checked = page.productIds.includes(product.id);
