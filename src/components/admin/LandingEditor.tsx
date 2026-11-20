@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteLanding, saveLanding } from "@/app/admin/actions";
 import { SingleImage } from "@/components/admin/SingleImage";
+import { LandingDesignEditor } from "@/components/admin/LandingDesignEditor";
 import type { Landing, LandingSlide } from "@/lib/landing";
 import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 
-type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent">;
+type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent" | "design">;
 const slideFields = { eyebrow: "Small heading", title: "Main heading", text: "Description", button: "Button text" } as const;
 
 export function LandingEditor({ initial, products }: { initial: Landing; products: { id: number; name: string; nameKa: string | null }[] }) {
@@ -77,6 +78,7 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
   return <div className="space-y-6 pb-20"><div className="flex flex-wrap items-end justify-between gap-4"><div><Link href="/admin/landings" className="text-sm text-zinc-500 underline">← Landing pages</Link><h1 className="mt-2 text-2xl font-semibold">{page.id ? "Edit landing" : "Create landing"}</h1></div>{savedPage.id && savedPage.published && <a target="_blank" rel="noreferrer" href={landingPath(savedPage.slug)} className="admin-btn-ghost">Open landing ↗</a>}</div>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Page settings</h2>{field("title", "Campaign name")}{field("slug", "URL slug (e.g. black-friday)")}<p className="text-sm text-zinc-500 md:col-span-2">Address: {landingPath(page.slug || "your-campaign")}</p><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={page.published} onChange={(e) => setPage({ ...page, published: e.target.checked })} /> Publish this page</label><p className="text-sm text-zinc-500">{savedPage.id && savedPage.published ? "The open link shows the last saved version." : "Save and publish to open the landing page."}</p></section>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Header</h2>{field("announcement", "Announcement text")}{field("headerButton", "Header button text")}{image("logo", "Logo (optional; site logo is used by default)")}</section>
+    <LandingDesignEditor design={page.design} onChange={(update) => setPage((current) => ({ ...current, design: update(current.design) }))} />
     <section className="admin-card space-y-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">Hero slider</h2>
@@ -133,7 +135,19 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
         })}
       </div>
     </section>
-    <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">About</h2>{field("aboutTitle", "Heading")}{field("aboutText", "Text", true)}{image("aboutImage", "About image")}</section>
+    <section className="admin-card grid gap-4 p-6 md:grid-cols-2">
+      <h2 className="text-lg font-semibold md:col-span-2">About</h2>
+      {field("aboutTitle", "Heading")}{field("aboutText", "Text", true)}{image("aboutImage", "About image")}
+      <label className="block space-y-1 text-sm">
+        <span>Image position on desktop</span>
+        <select className="admin-input" value={page.design.aboutImageSide} onChange={(event) => {
+          const side = event.target.value === "right" ? "right" : "left";
+          setPage((current) => ({ ...current, design: { ...current.design, aboutImageSide: side } }));
+        }}>
+          <option value="left">Left</option><option value="right">Right</option>
+        </select>
+      </label>
+    </section>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Footer</h2>{field("footerText", "Footer text", true)}{field("footerPhone", "Phone")}{field("footerEmail", "Email")}</section>
     <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t border-zinc-200 bg-zinc-100/95 py-4"><button className="admin-btn" disabled={pending} onClick={save}>{pending ? "Saving..." : "Save landing"}</button>{page.id && <button className="admin-btn-ghost text-red-700" disabled={pending} onClick={() => { if (confirm("Delete this landing page?")) start(() => deleteLanding(page.id)); }}>Delete</button>}<span role="status" className="text-sm">{message}</span></div>
   </div>;

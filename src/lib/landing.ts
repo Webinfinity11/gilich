@@ -3,6 +3,7 @@ import { cache } from "react";
 import { connection } from "next/server";
 import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 import { getProductsByIds } from "@/lib/catalog";
+import { defaultLandingDesign, normalizeLandingDesign, type LandingDesign } from "@/lib/landing-design";
 
 export type LandingSlide = {
   id: string;
@@ -18,6 +19,7 @@ export type Landing = {
   logo: string; headerButton: string; heroSlides: LandingSlide[]; productsTitle: string;
   productIds: number[]; aboutTitle: string; aboutText: string; aboutImage: string;
   discountPercent: number;
+  design: LandingDesign;
   footerText: string; footerPhone: string; footerEmail: string;
 };
 
@@ -25,6 +27,7 @@ export const landingDefaults: Omit<Landing, "id"> = {
   slug: "", published: false, title: "Black Friday", announcement: "აღმოაჩინეთ განსაკუთრებული შეთავაზებები",
   logo: "", headerButton: "Black Friday",
   discountPercent: 0,
+  design: defaultLandingDesign,
   heroSlides: [{
     id: "first-slide", image: "", eyebrow: "GILICH JEWELRY HOUSE",
     title: "შეარჩიეთ თქვენი განსაკუთრებული სამკაული",
@@ -59,7 +62,7 @@ export async function listLandings(): Promise<Landing[]> {
         title: value.heroTitle ?? first.title, text: value.heroText ?? first.text, button: value.heroButton ?? first.button,
       }]);
       const discountPercent = validLandingDiscount(value.discountPercent) ? value.discountPercent : 0;
-      return [{ ...landingDefaults, ...value, heroSlides, discountPercent, id: row.key.slice(8) } as Landing];
+      return [{ ...landingDefaults, ...value, heroSlides, discountPercent, design: normalizeLandingDesign(value.design), id: row.key.slice(8) } as Landing];
     } catch { return []; }
   });
 }

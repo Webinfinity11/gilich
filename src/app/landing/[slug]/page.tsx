@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- Campaign images can come from admin uploads. */
-import { Suspense } from "react";
+import { Fragment, Suspense, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CampaignHeader } from "@/components/landing/CampaignHeader";
@@ -9,6 +9,7 @@ import { defaultHero } from "@/lib/content";
 import { getLandingProducts, getPublishedLanding } from "@/lib/landing";
 import { landingPath } from "@/lib/landing-path";
 import { getSiteInfo } from "@/lib/settings";
+import type { LandingSection } from "@/lib/landing-design";
 
 export default function LandingPage({ params }: { params: Promise<{ slug: string }> }) {
   return <Suspense fallback={<div className="campaign" />}><LandingContent params={params} /></Suspense>;
@@ -20,38 +21,46 @@ async function LandingContent({ params }: { params: Promise<{ slug: string }> })
   if (!page) notFound();
 
   const [products, info] = await Promise.all([getLandingProducts(page), getSiteInfo("ka-ge")]);
+  const { design } = page;
+  const showProducts = products.length > 0 && !design.hidden.includes("products");
   const slides = page.heroSlides.map((slide) => ({
     ...slide,
     image: slide.image || defaultHero[0].image,
-    link: products.length && slide.button ? "#products" : "",
+    link: showProducts && slide.button ? "#products" : "",
   }));
   const logo = page.logo || info.logo;
   const href = landingPath(slug);
   const homeLabel = "Gilich Jewelry House — მთავარი გვერდი";
+  const theme = Object.fromEntries(Object.entries(design.theme).map(([name, color]) => [`--campaign-${name}`, color])) as CSSProperties;
+  const blocks: Record<LandingSection, ReactNode> = {
+    hero: <HeroSlider slides={slides} appearance={design} />,
+    products: showProducts && (
+      <section id="products" className="campaign-products campaign-wrap">
+        <div className="campaign-section-heading">
+          <h2>{page.productsTitle}</h2>
+        </div>
+        <CampaignProducts products={products} discountPercent={page.discountPercent} />
+      </section>
+    ),
+    about: (page.aboutImage || page.aboutTitle || page.aboutText) && (
+      <section className={`campaign-about ${page.aboutImage ? `campaign-about-image-${design.aboutImageSide}` : "campaign-text-only"}`}>
+        {page.aboutImage && <div className="campaign-about-image"><img src={page.aboutImage} alt="" loading="lazy" /></div>}
+        <div className="campaign-about-copy">
+          {page.aboutTitle && <h2>{page.aboutTitle}</h2>}
+          {page.aboutText && <p>{page.aboutText}</p>}
+        </div>
+      </section>
+    ),
+  };
 
   return (
-    <>
+    <div className="campaign-design" style={theme}>
       {page.announcement && <div className="campaign-announcement">{page.announcement}</div>}
-      <CampaignHeader href={href} logo={logo} collectionButton={products.length ? page.headerButton : undefined} showCart />
+      <CampaignHeader href={href} logo={logo} collectionButton={showProducts ? page.headerButton : undefined} showCart />
       <main>
-        <HeroSlider slides={slides} landing />
-        {products.length > 0 && (
-          <section id="products" className="campaign-products campaign-wrap">
-            <div className="campaign-section-heading">
-              <h2>{page.productsTitle}</h2>
-            </div>
-            <CampaignProducts products={products} discountPercent={page.discountPercent} />
-          </section>
-        )}
-        {(page.aboutImage || page.aboutTitle || page.aboutText) && (
-          <section className={page.aboutImage ? "campaign-about" : "campaign-about campaign-text-only"}>
-            {page.aboutImage && <div className="campaign-about-image"><img src={page.aboutImage} alt="" loading="lazy" /></div>}
-            <div className="campaign-about-copy">
-              {page.aboutTitle && <h2>{page.aboutTitle}</h2>}
-              {page.aboutText && <p>{page.aboutText}</p>}
-            </div>
-          </section>
-        )}
+        {design.sections.filter((section) => !design.hidden.includes(section)).map((section) => (
+          <Fragment key={section}>{blocks[section]}</Fragment>
+        ))}
       </main>
       <footer className="campaign-footer">
         <div className="campaign-wrap campaign-footer-inner">
@@ -67,6 +76,6 @@ async function LandingContent({ params }: { params: Promise<{ slug: string }> })
           )}
         </div>
       </footer>
-    </>
+    </div>
   );
 }

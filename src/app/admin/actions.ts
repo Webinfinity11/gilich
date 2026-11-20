@@ -15,6 +15,7 @@ import { slugify } from "@/lib/slug";
 import { saveImage } from "@/lib/storage";
 import { landingDefaults, listLandings, normalizeLandingSlides, validLandingDiscount, type Landing } from "@/lib/landing";
 import { LANDING_PRODUCT_LIMIT } from "@/lib/landing-limits";
+import { normalizeLandingDesign } from "@/lib/landing-design";
 
 export type ActionState = { ok: boolean; message: string } | null;
 
@@ -31,7 +32,8 @@ export async function saveLanding(input: Landing): Promise<{ ok: boolean; messag
   const values = Object.fromEntries(fields.map((key) => [key, typeof input[key as keyof Landing] === "string" ? (input[key as keyof Landing] as string).trim().slice(0, 10000) : ""]));
   const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, LANDING_PRODUCT_LIMIT);
   const heroSlides = normalizeLandingSlides(input.heroSlides);
-  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds, heroSlides, discountPercent });
+  const design = normalizeLandingDesign(input.design);
+  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds, heroSlides, discountPercent, design });
   const key = `landing:${id}`;
   await db.setting.upsert({ where: { key }, create: { key, value }, update: { value } });
   return { ok: true, message: "Saved successfully.", id, slug };

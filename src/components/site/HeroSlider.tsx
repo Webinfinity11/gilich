@@ -2,14 +2,38 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { HeroSlide } from "@/lib/content";
+import type { LandingDesign } from "@/lib/landing-design";
 import { useI18n } from "./lang";
 import { LLink as Link } from "./LLink";
 
-export function HeroSlider({ slides, landing = false }: { slides: (HeroSlide & { text?: string })[]; landing?: boolean }) {
+type HeroAppearance = Pick<LandingDesign, "overlayColor" | "overlayOpacity" | "overlayStyle" | "heroTextColor" | "heroAlign" | "heroHeight" | "autoplaySeconds">;
+
+const heroHeights = {
+  compact: "h-[360px] md:h-[440px] lg:h-[520px]",
+  standard: "h-[min(460px,75svh)] min-h-[380px] md:h-[600px] lg:h-[740px]",
+  tall: "h-[min(660px,85svh)] min-h-[440px] md:h-[720px] lg:h-[min(920px,95svh)]",
+};
+const heroAlignment = {
+  left: "md:pl-16 lg:pl-20",
+  center: "mx-auto text-center",
+  right: "ml-auto text-right md:pr-16 lg:pr-20",
+};
+
+export function HeroSlider({ slides, appearance }: { slides: (HeroSlide & { text?: string })[]; appearance?: HeroAppearance }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const count = slides.length;
-  const Heading = landing ? "h1" : "h2";
+  const Heading = appearance ? "h1" : "h2";
+  const interval = (appearance?.autoplaySeconds ?? 6) * 1000;
+  const alignment = appearance?.heroAlign ?? "left";
+  const overlay = appearance && (() => {
+    const alpha = (percent: number) => Math.round(percent * 255 / 100).toString(16).padStart(2, "0");
+    const strongest = appearance.overlayColor + alpha(appearance.overlayOpacity);
+    const middle = appearance.overlayColor + alpha(appearance.overlayOpacity * 20 / 55);
+    if (appearance.overlayStyle === "solid") return strongest;
+    if (alignment === "center") return `linear-gradient(to right, transparent, ${strongest}, transparent)`;
+    return `linear-gradient(to ${alignment === "right" ? "left" : "right"}, ${strongest}, ${middle}, transparent)`;
+  })();
   // Phones have no arrows, so a horizontal swipe changes the slide
   const touch = useRef<{ x: number; y: number } | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
@@ -27,16 +51,16 @@ export function HeroSlider({ slides, landing = false }: { slides: (HeroSlide & {
   };
 
   useEffect(() => {
-    if (count < 2) return;
-    const timer = setTimeout(() => setIndex((i) => (i + 1) % count), 6000);
+    if (count < 2 || !interval) return;
+    const timer = setTimeout(() => setIndex((i) => (i + 1) % count), interval);
     return () => clearTimeout(timer);
-  }, [index, count]);
+  }, [index, count, interval]);
 
   if (!count) return null;
 
   return (
     <section
-      className="relative h-[min(460px,75svh)] min-h-[380px] touch-pan-y overflow-hidden bg-black md:h-[600px] lg:h-[740px]"
+      className={`relative touch-pan-y overflow-hidden bg-black ${heroHeights[appearance?.heroHeight ?? "standard"]}`}
       aria-roledescription="carousel"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
@@ -53,10 +77,10 @@ export function HeroSlider({ slides, landing = false }: { slides: (HeroSlide & {
             alt=""
             className={`absolute inset-0 size-full object-cover transition-transform duration-[7000ms] ${i === index ? "scale-105" : "scale-100"}`}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
-          <div className="container-site relative flex h-full flex-col justify-center text-white">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" style={overlay ? { background: overlay } : undefined} />
+          <div className="container-site relative flex h-full flex-col justify-center text-white" style={appearance && { color: appearance.heroTextColor }}>
             {i === index && (
-              <div className="stagger max-w-[560px] md:pl-16 lg:pl-20">
+              <div className={`stagger max-w-[560px] ${heroAlignment[alignment]}`}>
                 {s.eyebrow && <p className="text-base sm:text-lg md:text-xl">{s.eyebrow}</p>}
                 {s.title && <Heading className="mt-3 text-[32px] leading-[1.1] [overflow-wrap:anywhere] sm:text-[38px] md:text-[60px]">{s.title}</Heading>}
                 {s.text && <p className="mt-3 whitespace-pre-line [overflow-wrap:anywhere] md:text-lg">{s.text}</p>}
@@ -96,7 +120,7 @@ export function HeroSlider({ slides, landing = false }: { slides: (HeroSlide & {
               className="px-1.5 py-4"
             >
               <span className="relative block h-[3px] w-10 overflow-hidden bg-white/40">
-                {i === index && <span key={index} className="animate-progress absolute inset-0 bg-white" style={{ animationDuration: "6000ms" }} />}
+                {i === index && <span key={index} className={`absolute inset-0 bg-white ${interval ? "animate-progress" : ""}`} style={interval ? { animationDuration: `${interval}ms` } : undefined} />}
               </span>
             </button>
           ))}
