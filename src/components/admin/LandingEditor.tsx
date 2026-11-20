@@ -9,7 +9,7 @@ import { SingleImage } from "@/components/admin/SingleImage";
 import type { Landing, LandingSlide } from "@/lib/landing";
 import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 
-type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides">;
+type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent">;
 const slideFields = { eyebrow: "Small heading", title: "Main heading", text: "Description", button: "Button text" } as const;
 
 export function LandingEditor({ initial, products }: { initial: Landing; products: { id: number; name: string; nameKa: string | null }[] }) {
@@ -114,6 +114,12 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
     <section className="admin-card space-y-4 p-6">
       <h2 className="text-lg font-semibold">Products</h2>
       {field("productsTitle", "Section heading")}
+      <label className="block max-w-64 space-y-1 text-sm font-medium">
+        <span>Campaign discount (%)</span>
+        <input className="admin-input" type="number" min={0} max={100} step={1} value={page.discountPercent || ""} placeholder="0"
+          onChange={(event) => setPage((current) => ({ ...current, discountPercent: Number(event.target.value) }))} />
+      </label>
+      <p className="text-sm text-zinc-500">Applies to the current prices of the selected products in this campaign.</p>
       <p className="text-sm text-zinc-500">Choose up to {LANDING_PRODUCT_LIMIT} products for one row ({page.productIds.length} selected).</p>
       <div className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-zinc-200 p-4 sm:grid-cols-2">
         {products.map((product) => {

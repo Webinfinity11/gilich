@@ -10,9 +10,11 @@ export async function CampaignHeader({ href, logo, collectionButton, showCart = 
   return (
     <header className="campaign-header">
       <div className="campaign-wrap campaign-header-inner">
-        <Link href={href}><img className="campaign-logo" src={image} alt="Gilich Jewelry House" /></Link>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="min-w-0 justify-self-start">
           {collectionButton && <a className="campaign-header-button" href="#products">{collectionButton}</a>}
+        </div>
+        <Link href={href} className="justify-self-center"><img className="campaign-logo" src={image} alt="Gilich Jewelry House" /></Link>
+        <div className="justify-self-end">
           {showCart && <CampaignCartLink href={`${href}/cart`} />}
         </div>
       </div>

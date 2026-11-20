@@ -7,7 +7,7 @@ import { CloseIcon } from "@/components/site/icons";
 import { useI18n } from "@/components/site/lang";
 import type { ProductDetail } from "@/lib/catalog";
 
-export function CampaignProducts({ products }: { products: ProductDetail[] }) {
+export function CampaignProducts({ products, discountPercent }: { products: ProductDetail[]; discountPercent: number }) {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const { t } = useI18n();
@@ -23,7 +23,7 @@ export function CampaignProducts({ products }: { products: ProductDetail[] }) {
       <div className="campaign-grid">
         {products.map((item) => (
           <article key={item.id} className="campaign-product">
-            <ProductCard product={item} onOpen={() => setProduct(item)} />
+            <ProductCard product={item} discountPercent={discountPercent} onOpen={() => setProduct(item)} />
           </article>
         ))}
       </div>
@@ -41,7 +41,7 @@ export function CampaignProducts({ products }: { products: ProductDetail[] }) {
                 <CloseIcon className="size-5" />
               </button>
             </div>
-            <ProductPurchase key={product.id} product={product} onAdded={close}>
+            <ProductPurchase key={product.id} product={product} onAdded={close} discountPercent={discountPercent}>
               {product.description && product.description !== product.shortDescription && (
                 <div className="mt-6 border-t border-line pt-6">
                   <h3 className="font-medium">{t.product.description}</h3>

@@ -61,28 +61,47 @@ function write(key: string, value: unknown) {
   }
 }
 
-export function StoreProvider({ children, scope }: { children: React.ReactNode; scope?: string }) {
-  const cartKey = scope ? `${CART_KEY}:${scope}` : CART_KEY;
-  const wishKey = scope ? `${WISH_KEY}:${scope}` : WISH_KEY;
+export function StoreProvider({ children, previousCartScope, campaignPrices }: {
+  children: React.ReactNode;
+  previousCartScope?: string;
+  campaignPrices?: Record<string, number>;
+}) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    const shared = read<CartItem[]>(CART_KEY, []);
+    const oldKey = previousCartScope && `${CART_KEY}:${previousCartScope}`;
+    const previous = oldKey ? read<CartItem[]>(oldKey, []) : [];
+    const merged = new Map(shared.map((item) => [item.key, item]));
+    for (const item of previous) {
+      const existing = merged.get(item.key);
+      merged.set(item.key, existing ? { ...existing, qty: existing.qty + item.qty } : item);
+    }
+    const initial = [...merged.values()];
+    if (oldKey && previous.length) {
+      try {
+        localStorage.setItem(CART_KEY, JSON.stringify(initial));
+        localStorage.removeItem(oldKey);
+      } catch {
+        // Storage may be blocked. The merged cart can still be used in memory.
+      }
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from localStorage after mount
-    setCart(read<CartItem[]>(cartKey, []));
-    setWishlist(read<WishItem[]>(wishKey, []));
+    setCart(initial);
+    setWishlist(read<WishItem[]>(WISH_KEY, []));
     setReady(true);
-  }, [cartKey, wishKey]);
+  }, [previousCartScope]);
 
   useEffect(() => {
-    if (ready) write(cartKey, cart);
-  }, [cartKey, cart, ready]);
+    if (ready) write(CART_KEY, cart);
+  }, [cart, ready]);
 
   useEffect(() => {
-    if (ready) write(wishKey, wishlist);
-  }, [wishKey, wishlist, ready]);
+    if (ready) write(WISH_KEY, wishlist);
+  }, [wishlist, ready]);
 
   const addToCart = useCallback<StoreValue["addToCart"]>((item, qty = 1) => {
     const key = `${item.productId}:${item.variationId ?? 0}`;
@@ -112,13 +131,17 @@ export function StoreProvider({ children, scope }: { children: React.ReactNode; 
     );
   }, []);
 
+  const visibleCart = useMemo(() => campaignPrices
+    ? cart.map((item) => ({ ...item, price: campaignPrices[item.key] ?? item.price }))
+    : cart, [cart, campaignPrices]);
+
   const value = useMemo<StoreValue>(
     () => ({
-      cart,
+      cart: visibleCart,
       wishlist,
       ready,
-      cartCount: cart.reduce((s, i) => s + i.qty, 0),
-      cartTotal: cart.reduce((s, i) => s + i.qty * i.price, 0),
+      cartCount: visibleCart.reduce((s, i) => s + i.qty, 0),
+      cartTotal: visibleCart.reduce((s, i) => s + i.qty * i.price, 0),
       addToCart,
       setQty,
       removeFromCart,
@@ -128,7 +151,7 @@ export function StoreProvider({ children, scope }: { children: React.ReactNode; 
       notice,
       dismissNotice: () => setNotice(null),
     }),
-    [cart, wishlist, ready, addToCart, setQty, removeFromCart, clearCart, toggleWishlist, notice],
+    [visibleCart, wishlist, ready, addToCart, setQty, removeFromCart, clearCart, toggleWishlist, notice],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

@@ -6,10 +6,8 @@ import { CampaignHeader } from "@/components/landing/CampaignHeader";
 import { CampaignProducts } from "@/components/landing/CampaignProducts";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { defaultHero } from "@/lib/content";
-import { getPublishedLanding } from "@/lib/landing";
-import { LANDING_PRODUCT_LIMIT } from "@/lib/landing-limits";
+import { getLandingProducts, getPublishedLanding } from "@/lib/landing";
 import { landingPath } from "@/lib/landing-path";
-import { getProductsByIds } from "@/lib/catalog";
 import { getSiteInfo } from "@/lib/settings";
 
 export default function LandingPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -21,9 +19,7 @@ async function LandingContent({ params }: { params: Promise<{ slug: string }> })
   const page = await getPublishedLanding(slug);
   if (!page) notFound();
 
-  const [catalog, info] = await Promise.all([getProductsByIds(page.productIds, "ka-ge"), getSiteInfo("ka-ge")]);
-  const productsById = new Map(catalog.map((product) => [product.id, product]));
-  const products = page.productIds.flatMap((id) => productsById.get(id) ?? []).slice(0, LANDING_PRODUCT_LIMIT);
+  const [products, info] = await Promise.all([getLandingProducts(page), getSiteInfo("ka-ge")]);
   const slides = page.heroSlides.map((slide) => ({
     ...slide,
     image: slide.image || defaultHero[0].image,
@@ -44,7 +40,7 @@ async function LandingContent({ params }: { params: Promise<{ slug: string }> })
             <div className="campaign-section-heading">
               <h2>{page.productsTitle}</h2>
             </div>
-            <CampaignProducts products={products} />
+            <CampaignProducts products={products} discountPercent={page.discountPercent} />
           </section>
         )}
         {(page.aboutImage || page.aboutTitle || page.aboutText) && (

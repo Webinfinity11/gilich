@@ -2,9 +2,9 @@
 .campaign-wrap { width: min(1320px, calc(100% - 64px)); margin: auto; }
 .campaign-announcement { padding: 9px 20px; background: #27211e; text-align: center; color: #fff; font-size: 12px; letter-spacing: .04em; }
 .campaign-header { background: #fff; }
-.campaign-header-inner { min-height: 85px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.campaign-header-inner { min-height: 85px; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
 .campaign-logo { width: auto; max-width: 190px; height: 48px; object-fit: contain; }
-.campaign-header-button { border: 1px solid #29231f; padding: 12px 20px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.campaign-header-button { display: inline-block; border: 1px solid #29231f; padding: 12px 20px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; overflow-wrap: anywhere; }
 .campaign-about-copy p { max-width: 490px; color: #6e625a; line-height: 1.9; white-space: pre-line; }
 .campaign-about-image { position: relative; min-height: 420px; background: #d9cec0; }
 .campaign-about-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -30,8 +30,8 @@
 @media (max-width: 700px) {
   .campaign-wrap { width: calc(100% - 36px); }
   .campaign-header-inner { min-height: 70px; }
-  .campaign-logo { height: 38px; max-width: 145px; }
-  .campaign-header-button { padding: 10px; font-size: 10px; }
+  .campaign-logo { height: 38px; max-width: min(145px, 40vw); }
+  .campaign-header-button { padding: 8px; font-size: 10px; }
   .campaign-about { grid-template-columns: 1fr; }
   .campaign-about-image { min-height: 320px; }
   .campaign-grid {

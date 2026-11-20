@@ -2,6 +2,8 @@
 
 import { db } from "@/lib/db";
 import { effectivePrice, parseJson, variationName } from "@/lib/catalog";
+import { getLandingProducts, getPublishedLanding } from "@/lib/landing";
+import { discountPrice } from "@/lib/money";
 
 export type FormState = { ok: boolean; message: string } | null;
 
@@ -67,6 +69,7 @@ export async function placeOrder(input: {
   customer: Record<string, string>;
   paymentMethod: string;
   lang?: string;
+  campaignSlug?: string;
 }): Promise<CheckoutResult> {
   const m = msg(input.lang);
   const c = Object.fromEntries(Object.entries(input.customer).map(([k, v]) => [k, String(v ?? "").trim().slice(0, 500)]));
@@ -77,6 +80,10 @@ export async function placeOrder(input: {
 
   const lines = input.lines.filter((l) => Number.isInteger(l.productId) && l.qty > 0 && l.qty <= 99);
   if (!lines.length) return { ok: false, message: m.empty };
+
+  const campaign = input.campaignSlug ? await getPublishedLanding(input.campaignSlug) : undefined;
+  if (input.campaignSlug && !campaign) return { ok: false, message: m.unavailable };
+  const campaignIds = new Set(campaign?.discountPercent ? (await getLandingProducts(campaign)).map((product) => product.id) : []);
 
   // Prices always come from the database, never from the browser
   const products = await db.product.findMany({
@@ -91,6 +98,7 @@ export async function placeOrder(input: {
     // No variation picked = the main product itself
     const v = line.variationId ? product.variations.find((x) => x.id === line.variationId) : undefined;
     if (line.variationId && !v) return { ok: false, message: m.options(product.name) };
+    const price = discountPrice(effectivePrice(v ?? product), campaignIds.has(product.id) ? campaign?.discountPercent : 0);
     if (v) {
       if (v.stock !== null && v.stock < line.qty) return { ok: false, message: m.stock(product.name) };
       items.push({
@@ -99,7 +107,7 @@ export async function placeOrder(input: {
         name: product.name,
         variation: variationName(v),
         image: parseJson<string[]>(v.images, [])[0] ?? v.image ?? product.images[0]?.url ?? null,
-        price: effectivePrice(v),
+        price,
         quantity: line.qty,
       });
     } else {
@@ -110,7 +118,7 @@ export async function placeOrder(input: {
         name: product.name,
         variation: null,
         image: product.images[0]?.url ?? null,
-        price: effectivePrice(product),
+        price,
         quantity: line.qty,
       });
     }

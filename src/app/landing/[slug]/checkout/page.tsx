@@ -9,7 +9,7 @@ export default function CampaignCheckout({ params }: { params: Promise<{ slug: s
   return (
     <Suspense>
       <CampaignCheckoutPage params={params} step="checkout">
-        {(href) => <CheckoutForm campaignHref={href} />}
+        {(href, slug) => <CheckoutForm campaignHref={href} campaignSlug={slug} />}
       </CampaignCheckoutPage>
     </Suspense>
   );

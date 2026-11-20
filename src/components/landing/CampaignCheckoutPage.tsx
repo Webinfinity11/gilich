@@ -8,7 +8,7 @@ import { CampaignHeader } from "./CampaignHeader";
 export async function CampaignCheckoutPage({ params, step, children }: {
   params: Promise<{ slug: string }>;
   step: "cart" | "checkout" | "receipt";
-  children: (href: string) => React.ReactNode;
+  children: (href: string, slug: string) => React.ReactNode;
 }) {
   const { slug } = await params;
   const page = await getPublishedLanding(slug);
@@ -25,7 +25,7 @@ export async function CampaignCheckoutPage({ params, step, children }: {
           {step === "checkout" && <Link href={`${href}/cart`} className="mb-4 inline-block text-sm underline">{t.cart.title}</Link>}
           <h1 className="text-3xl text-ink">{heading}</h1>
         </div>
-        {children(href)}
+        {children(href, slug)}
       </main>
     </>
   );

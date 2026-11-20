@@ -13,7 +13,9 @@ import { ZoomImage } from "./ZoomImage";
 const featureIcons = ["/media/icon3-product-detail.png", "/media/icon2-product-detail.png", "/media/h1-icon4.png"];
 
 /** Gallery + options + add to cart. Picking a variation switches price and photo. */
-export function ProductPurchase({ product, children, onAdded }: { product: ProductDetail; children?: React.ReactNode; onAdded?: () => void }) {
+export function ProductPurchase({ product, children, onAdded, discountPercent = 0 }: {
+  product: ProductDetail; children?: React.ReactNode; onAdded?: () => void; discountPercent?: number;
+}) {
   const { addToCart, ready } = useStore();
   const { t } = useI18n();
   const Heading = onAdded ? "h2" : "h1";
@@ -93,7 +95,7 @@ export function ProductPurchase({ product, children, onAdded }: { product: Produ
       <div>
         <Heading className="text-[28px] text-ink md:text-[32px]">{title}</Heading>
         <div className="mt-2 text-[28px] font-medium text-ink">
-          {variation ? (
+          {discountPercent ? <PriceTag p={variation ?? product} discountPercent={discountPercent} /> : variation ? (
             variation.salePrice !== null && variation.salePrice < variation.price ? (
               <>
                 <del className="mr-3 text-xl font-normal text-muted">{formatPrice(variation.price)}</del>

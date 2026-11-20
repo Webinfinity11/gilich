@@ -1,12 +1,17 @@
 import type { ProductCard as Card } from "@/lib/catalog";
-import { formatPrice } from "@/lib/money";
+import { discountPrice, formatPrice } from "@/lib/money";
 import { LLink as Link } from "./LLink";
 import { WishlistButton } from "./WishlistButton";
 
-type Priced = Pick<Card, "minPrice" | "maxPrice" | "price" | "salePrice" | "hasVariations">;
+type Priced = Pick<Card, "price" | "salePrice">;
 
 /** One price (no ranges): for variable products price/salePrice are those of the default variation */
-export function PriceTag({ p, className = "" }: { p: Priced; className?: string }) {
+export function PriceTag({ p, className = "", discountPercent = 0 }: { p: Priced; className?: string; discountPercent?: number }) {
+  const currentPrice = Math.min(p.price, p.salePrice ?? p.price);
+  const campaignPrice = discountPrice(currentPrice, discountPercent);
+  if (campaignPrice < currentPrice) {
+    return <span className={className}><del className="mr-2 text-muted">{formatPrice(currentPrice)}</del>{formatPrice(campaignPrice)}</span>;
+  }
   if (p.salePrice !== null && p.salePrice < p.price) {
     return (
       <span className={className}>
@@ -18,7 +23,7 @@ export function PriceTag({ p, className = "" }: { p: Priced; className?: string 
   return <span className={className}>{formatPrice(p.price)}</span>;
 }
 
-export function ProductCard({ product, onOpen }: { product: Card; onOpen?: () => void }) {
+export function ProductCard({ product, onOpen, discountPercent }: { product: Card; onOpen?: () => void; discountPercent?: number }) {
   const [first, second] = product.images;
   const colorAttr = product.attributes.find((a) => a.type === "color" && a.values.length > 1);
   const imageClass = "relative block aspect-[338/383] overflow-hidden bg-[#f6f6f6]";
@@ -67,7 +72,7 @@ export function ProductCard({ product, onOpen }: { product: Card; onOpen?: () =>
             ? <button type="button" onClick={onOpen} aria-haspopup="dialog" className="link-draw cursor-pointer">{product.name}</button>
             : <Link href={`/product/${product.slug}`} className="link-draw">{product.name}</Link>}
         </h3>
-        <PriceTag p={product} className="mt-1 block text-lg text-ink" />
+        <PriceTag p={product} discountPercent={discountPercent} className="mt-1 block text-lg text-ink" />
         {colorAttr && (
           <div className="mt-2 flex justify-center gap-1.5">
             {colorAttr.values.slice(0, 6).map((v) => (

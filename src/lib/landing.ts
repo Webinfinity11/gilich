@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { cache } from "react";
 import { connection } from "next/server";
-import { LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
+import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
+import { getProductsByIds } from "@/lib/catalog";
 
 export type LandingSlide = {
   id: string;
@@ -16,12 +17,14 @@ export type Landing = {
   id: string; slug: string; published: boolean; title: string; announcement: string;
   logo: string; headerButton: string; heroSlides: LandingSlide[]; productsTitle: string;
   productIds: number[]; aboutTitle: string; aboutText: string; aboutImage: string;
+  discountPercent: number;
   footerText: string; footerPhone: string; footerEmail: string;
 };
 
 export const landingDefaults: Omit<Landing, "id"> = {
   slug: "", published: false, title: "Black Friday", announcement: "აღმოაჩინეთ განსაკუთრებული შეთავაზებები",
   logo: "", headerButton: "Black Friday",
+  discountPercent: 0,
   heroSlides: [{
     id: "first-slide", image: "", eyebrow: "GILICH JEWELRY HOUSE",
     title: "შეარჩიეთ თქვენი განსაკუთრებული სამკაული",
@@ -55,7 +58,8 @@ export async function listLandings(): Promise<Landing[]> {
         image: value.heroImage ?? first.image, eyebrow: value.heroEyebrow ?? first.eyebrow,
         title: value.heroTitle ?? first.title, text: value.heroText ?? first.text, button: value.heroButton ?? first.button,
       }]);
-      return [{ ...landingDefaults, ...value, heroSlides, id: row.key.slice(8) } as Landing];
+      const discountPercent = validLandingDiscount(value.discountPercent) ? value.discountPercent : 0;
+      return [{ ...landingDefaults, ...value, heroSlides, discountPercent, id: row.key.slice(8) } as Landing];
     } catch { return []; }
   });
 }
@@ -63,4 +67,14 @@ export async function listLandings(): Promise<Landing[]> {
 export const getPublishedLanding = cache(async (slug: string) => {
   await connection();
   return (await listLandings()).find((page) => page.slug === slug && page.published);
+});
+
+export function validLandingDiscount(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 100;
+}
+
+export const getLandingProducts = cache(async (page: Landing) => {
+  const catalog = await getProductsByIds(page.productIds, "ka-ge");
+  const byId = new Map(catalog.map((product) => [product.id, product]));
+  return page.productIds.flatMap((id) => byId.get(id) ?? []).slice(0, LANDING_PRODUCT_LIMIT);
 });

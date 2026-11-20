@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/money";
 import { useI18n } from "./lang";
 import { useStore } from "./store";
 
-export function CheckoutForm({ campaignHref }: { campaignHref?: string }) {
+export function CheckoutForm({ campaignHref, campaignSlug }: { campaignHref?: string; campaignSlug?: string }) {
   const router = useRouter();
   const { cart, ready, cartTotal, clearCart } = useStore();
   const { t, lang, lp } = useI18n();
@@ -48,6 +48,7 @@ export function CheckoutForm({ campaignHref }: { campaignHref?: string }) {
         customer,
         paymentMethod: payment,
         lang,
+        campaignSlug,
       });
       if (res.ok) {
         clearCart();
