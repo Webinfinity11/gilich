@@ -16,6 +16,7 @@ import { saveImage } from "@/lib/storage";
 import { landingDefaults, listLandings, normalizeLandingSlides, validLandingDiscount, type Landing } from "@/lib/landing";
 import { LANDING_PRODUCT_LIMIT } from "@/lib/landing-limits";
 import { normalizeLandingDesign } from "@/lib/landing-design";
+import { landingEnglishDefaults, normalizeEnglishCopy } from "@/lib/landing-copy";
 
 export type ActionState = { ok: boolean; message: string } | null;
 
@@ -33,7 +34,8 @@ export async function saveLanding(input: Landing): Promise<{ ok: boolean; messag
   const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, LANDING_PRODUCT_LIMIT);
   const heroSlides = normalizeLandingSlides(input.heroSlides);
   const design = normalizeLandingDesign(input.design);
-  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds, heroSlides, discountPercent, design });
+  const english = normalizeEnglishCopy(input.english, landingEnglishDefaults);
+  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds, heroSlides, discountPercent, design, english });
   const key = `landing:${id}`;
   await db.setting.upsert({ where: { key }, create: { key, value }, update: { value } });
   return { ok: true, message: "Saved successfully.", id, slug };

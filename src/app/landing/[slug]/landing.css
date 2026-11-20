@@ -35,7 +35,9 @@
 @media (max-width: 700px) {
   .campaign-wrap { width: calc(100% - 36px); }
   .campaign-header-inner { min-height: 70px; }
-  .campaign-logo { height: 38px; max-width: min(145px, 40vw); }
+  .campaign-logo { height: 38px; max-width: min(145px, 35vw); }
+  .campaign-header-inner { gap: 4px; }
+  .campaign-header-inner > :last-child > a { width: 34px; }
   .campaign-header-button { padding: 8px; font-size: 10px; }
   .campaign-about { grid-template-columns: 1fr; }
   .campaign-about-image { min-height: 320px; }

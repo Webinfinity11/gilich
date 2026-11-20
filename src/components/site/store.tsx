@@ -61,10 +61,11 @@ function write(key: string, value: unknown) {
   }
 }
 
-export function StoreProvider({ children, previousCartScope, campaignPrices }: {
+export function StoreProvider({ children, previousCartScope, campaignPrices, campaignLabels }: {
   children: React.ReactNode;
   previousCartScope?: string;
   campaignPrices?: Record<string, number>;
+  campaignLabels?: Record<string, Pick<CartItem, "name" | "variation">>;
 }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
@@ -131,9 +132,9 @@ export function StoreProvider({ children, previousCartScope, campaignPrices }: {
     );
   }, []);
 
-  const visibleCart = useMemo(() => campaignPrices
-    ? cart.map((item) => ({ ...item, price: campaignPrices[item.key] ?? item.price }))
-    : cart, [cart, campaignPrices]);
+  const visibleCart = useMemo(() => campaignPrices || campaignLabels
+    ? cart.map((item) => ({ ...item, ...campaignLabels?.[item.key], price: campaignPrices?.[item.key] ?? item.price }))
+    : cart, [cart, campaignPrices, campaignLabels]);
 
   const value = useMemo<StoreValue>(
     () => ({

@@ -9,8 +9,9 @@ import { SingleImage } from "@/components/admin/SingleImage";
 import { LandingDesignEditor } from "@/components/admin/LandingDesignEditor";
 import type { Landing, LandingSlide } from "@/lib/landing";
 import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
+import { landingCopyFields } from "@/lib/landing-copy";
 
-type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent" | "design">;
+type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent" | "design" | "english">;
 const slideFields = { eyebrow: "Small heading", title: "Main heading", text: "Description", button: "Button text" } as const;
 
 export function LandingEditor({ initial, products }: { initial: Landing; products: { id: number; name: string; nameKa: string | null }[] }) {
@@ -139,6 +140,34 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
       {field("aboutTitle", "Heading")}{field("aboutText", "Text", true)}{image("aboutImage", "About image")}
     </section>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Footer</h2>{field("footerText", "Footer text", true)}{field("footerPhone", "Phone")}{field("footerEmail", "Email")}</section>
+    <details className="admin-card p-6">
+      <summary className="cursor-pointer text-lg font-semibold">English translations</summary>
+      <p className="mt-4 text-sm text-zinc-500">Products use the catalog translations. Add English versions here for custom campaign text.</p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {(Object.keys(landingCopyFields) as (keyof typeof landingCopyFields)[]).map((key) => (
+          <label key={key} className="block space-y-1 text-sm">
+            <span>{landingCopyFields[key]}</span>
+            <textarea rows={key === "aboutText" || key === "footerText" ? 3 : 1} className="admin-input" value={page.english[key] ?? ""}
+              onChange={(event) => {
+                const value = event.target.value;
+                setPage((current) => ({ ...current, english: { ...current.english, [key]: value } }));
+              }} />
+          </label>
+        ))}
+      </div>
+      {page.heroSlides.map((slide, index) => (
+        <fieldset key={slide.id} className="mt-4 grid gap-3 border-t border-zinc-200 pt-3 md:grid-cols-2">
+          <legend className="pr-2 text-sm font-semibold">Slide {index + 1}</legend>
+          {(Object.keys(slideFields) as (keyof typeof slideFields)[]).map((key) => (
+            <label key={key} className="block space-y-1 text-sm">
+              <span>{slideFields[key]}</span>
+              <textarea rows={key === "text" ? 3 : 1} className="admin-input" value={slide.english?.[key] ?? ""}
+                onChange={(event) => updateSlide(slide.id, { english: { ...slide.english, [key]: event.target.value } })} />
+            </label>
+          ))}
+        </fieldset>
+      ))}
+    </details>
     <LandingDesignEditor design={page.design} onChange={(update) => setPage((current) => ({ ...current, design: update(current.design) }))} />
     <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t border-zinc-200 bg-zinc-100/95 py-4"><button className="admin-btn" disabled={pending} onClick={save}>{pending ? "Saving..." : "Save landing"}</button>{page.id && <button className="admin-btn-ghost text-red-700" disabled={pending} onClick={() => { if (confirm("Delete this landing page?")) start(() => deleteLanding(page.id)); }}>Delete</button>}<span role="status" className="text-sm">{message}</span></div>
   </div>;

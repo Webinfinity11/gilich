@@ -4,6 +4,8 @@ import { connection } from "next/server";
 import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 import { getProductsByIds } from "@/lib/catalog";
 import { defaultLandingDesign, normalizeLandingDesign, type LandingDesign } from "@/lib/landing-design";
+import type { Lang } from "@/lib/i18n";
+import { landingEnglishDefaults, normalizeEnglishCopy, slideEnglishDefaults, type EnglishLandingCopy, type EnglishSlideCopy } from "@/lib/landing-copy";
 
 export type LandingSlide = {
   id: string;
@@ -12,6 +14,7 @@ export type LandingSlide = {
   title: string;
   text: string;
   button: string;
+  english?: EnglishSlideCopy;
 };
 
 export type Landing = {
@@ -20,6 +23,7 @@ export type Landing = {
   productIds: number[]; aboutTitle: string; aboutText: string; aboutImage: string;
   discountPercent: number;
   design: LandingDesign;
+  english: EnglishLandingCopy;
   footerText: string; footerPhone: string; footerEmail: string;
 };
 
@@ -28,6 +32,7 @@ export const landingDefaults: Omit<Landing, "id"> = {
   logo: "", headerButton: "Black Friday",
   discountPercent: 0,
   design: defaultLandingDesign,
+  english: {},
   heroSlides: [{
     id: "first-slide", image: "", eyebrow: "GILICH JEWELRY HOUSE",
     title: "შეარჩიეთ თქვენი განსაკუთრებული სამკაული",
@@ -46,6 +51,7 @@ export function normalizeLandingSlides(input: unknown): LandingSlide[] {
     return [{
       id: `slide-${index}`, image: text("image"), eyebrow: text("eyebrow"),
       title: text("title"), text: text("text"), button: text("button"),
+      english: normalizeEnglishCopy(slide.english, slideEnglishDefaults),
     }];
   });
 }
@@ -62,7 +68,10 @@ export async function listLandings(): Promise<Landing[]> {
         title: value.heroTitle ?? first.title, text: value.heroText ?? first.text, button: value.heroButton ?? first.button,
       }]);
       const discountPercent = validLandingDiscount(value.discountPercent) ? value.discountPercent : 0;
-      return [{ ...landingDefaults, ...value, heroSlides, discountPercent, design: normalizeLandingDesign(value.design), id: row.key.slice(8) } as Landing];
+      return [{
+        ...landingDefaults, ...value, heroSlides, discountPercent, design: normalizeLandingDesign(value.design),
+        english: normalizeEnglishCopy(value.english, landingEnglishDefaults), id: row.key.slice(8),
+      } as Landing];
     } catch { return []; }
   });
 }
@@ -76,8 +85,8 @@ export function validLandingDiscount(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 100;
 }
 
-export const getLandingProducts = cache(async (page: Landing) => {
-  const catalog = await getProductsByIds(page.productIds, "ka-ge");
+export const getLandingProducts = cache(async (page: Landing, lang: Lang = "ka-ge") => {
+  const catalog = await getProductsByIds(page.productIds, lang);
   const byId = new Map(catalog.map((product) => [product.id, product]));
   return page.productIds.flatMap((id) => byId.get(id) ?? []).slice(0, LANDING_PRODUCT_LIMIT);
 });
