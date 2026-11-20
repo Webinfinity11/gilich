@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["100.71.189.109"],
   cacheComponents: true,
   partialPrefetching: true,
   serverExternalPackages: ["pg"],

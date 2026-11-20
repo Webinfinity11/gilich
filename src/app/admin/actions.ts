@@ -13,8 +13,32 @@ import { toCents } from "@/lib/money";
 import { ORDER_STATUSES } from "@/lib/orders";
 import { slugify } from "@/lib/slug";
 import { saveImage } from "@/lib/storage";
+import { landingDefaults, listLandings, type Landing } from "@/lib/landing";
 
 export type ActionState = { ok: boolean; message: string } | null;
+
+export async function saveLanding(input: Landing): Promise<{ ok: boolean; message: string; id?: string }> {
+  await requireAdmin();
+  const id = /^[a-f0-9-]{36}$/.test(input.id) ? input.id : crypto.randomUUID();
+  const slug = slugify(input.slug);
+  if (!slug || !input.title.trim()) return { ok: false, message: "Enter a title and URL slug." };
+  const pages = await listLandings();
+  if (pages.some((page) => page.id !== id && page.slug === slug)) return { ok: false, message: "This URL is already in use." };
+  const fields = Object.keys(landingDefaults).filter((key) => key !== "published" && key !== "productIds");
+  const values = Object.fromEntries(fields.map((key) => [key, typeof input[key as keyof Landing] === "string" ? (input[key as keyof Landing] as string).trim().slice(0, 10000) : ""]));
+  const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))];
+  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds });
+  const key = `landing:${id}`;
+  await db.setting.upsert({ where: { key }, create: { key, value }, update: { value } });
+  return { ok: true, message: "Saved successfully.", id };
+}
+
+export async function deleteLanding(id: string) {
+  await requireAdmin();
+  if (!/^[a-f0-9-]{36}$/.test(id)) return;
+  await db.setting.deleteMany({ where: { key: `landing:${id}` } });
+  redirect("/admin/landings");
+}
 
 // ---------- Auth ----------
 

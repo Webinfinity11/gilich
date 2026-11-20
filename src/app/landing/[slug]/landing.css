@@ -1,0 +1,33 @@
+.campaign { background: #f9f7f3; color: #24201d; font-family: Arial, sans-serif; }
+.campaign-wrap { width: min(1320px, calc(100% - 64px)); margin: auto; }
+.campaign-announcement { padding: 9px 20px; background: #27211e; text-align: center; color: #fff; font-size: 12px; letter-spacing: .04em; }
+.campaign-header { background: #fff; }
+.campaign-header-inner { min-height: 85px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.campaign-logo { width: auto; max-width: 190px; height: 48px; object-fit: contain; }
+.campaign-header-button { border: 1px solid #29231f; padding: 12px 20px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.campaign-hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 610px; background: #eee8df; }
+.campaign-hero-copy { align-self: center; padding: 90px max(32px, 9vw); }
+.campaign-eyebrow { color: #9b8069; font-size: 11px; font-weight: 600; letter-spacing: .19em; text-transform: uppercase; }
+.campaign h1, .campaign h2 { font-family: Georgia, serif; font-weight: 400; line-height: 1.2; }
+.campaign h1 { margin: 23px 0; font-size: clamp(36px, 4vw, 66px); }
+.campaign-hero-copy p, .campaign-about-copy p { max-width: 490px; color: #6e625a; line-height: 1.9; white-space: pre-line; }
+.campaign-button { display: inline-flex; gap: 30px; margin-top: 34px; padding: 16px 22px; background: #29231f; color: #fff; font-size: 12px; letter-spacing: .07em; }
+.campaign-hero-image, .campaign-about-image { min-height: 420px; background: #d9cec0; }
+.campaign-hero-image img, .campaign-about-image img { width: 100%; height: 100%; object-fit: cover; }
+.campaign-products { padding-top: 105px; padding-bottom: 110px; }
+.campaign-section-heading { margin-bottom: 40px; text-align: center; }
+.campaign h2 { margin-top: 15px; font-size: clamp(30px, 3vw, 46px); }
+.campaign-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px 20px; }
+.campaign-product-image { aspect-ratio: 1; background: #eeeae5; overflow: hidden; }
+.campaign-product-image img { width: 100%; height: 100%; object-fit: cover; }
+.campaign-product h3 { margin: 18px 0 7px; font-size: 15px; font-weight: 500; }
+.campaign-product p { color: #8d7460; font-size: 14px; }
+.campaign-about { display: grid; grid-template-columns: 1fr 1fr; background: #e8e1d8; }
+.campaign-about-copy { align-self: center; padding: 80px max(32px, 9vw); }
+.campaign-about-copy p { margin-top: 24px; }
+.campaign-footer { background: #24201d; color: #eee7dd; padding: 70px 0; }
+.campaign-footer-inner { display: flex; justify-content: space-between; gap: 30px; }
+.campaign-footer-brand { font-family: Georgia, serif; font-size: 34px; letter-spacing: .16em; }
+.campaign-footer p { margin-top: 20px; color: #c1b4a7; white-space: pre-line; }
+.campaign-contacts { display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+@media (max-width: 700px) { .campaign-wrap { width: calc(100% - 36px); } .campaign-header-inner { min-height: 70px; } .campaign-logo { height: 38px; max-width: 145px; } .campaign-header-button { padding: 10px; font-size: 10px; } .campaign-hero, .campaign-about { grid-template-columns: 1fr; } .campaign-hero-copy { padding: 70px 24px; } .campaign-hero-image, .campaign-about-image { min-height: 320px; } .campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 12px; } .campaign-products { padding-top: 70px; padding-bottom: 75px; } .campaign-about-copy { padding: 65px 24px; } .campaign-footer-inner { flex-direction: column; } }

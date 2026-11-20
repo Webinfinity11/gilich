@@ -8,6 +8,8 @@ export async function proxy(request: NextRequest) {
     return adminGate(request, pathname);
   }
 
+  if (pathname === "/landing" || pathname.startsWith("/landing/")) return NextResponse.next();
+
   // Georgian pages are served from /ka-ge/... as-is
   if (pathname === "/ka-ge" || pathname.startsWith("/ka-ge/")) return NextResponse.next();
 
