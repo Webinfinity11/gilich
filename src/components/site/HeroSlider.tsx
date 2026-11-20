@@ -5,10 +5,11 @@ import type { HeroSlide } from "@/lib/content";
 import { useI18n } from "./lang";
 import { LLink as Link } from "./LLink";
 
-export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
+export function HeroSlider({ slides, landing = false }: { slides: (HeroSlide & { text?: string })[]; landing?: boolean }) {
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const count = slides.length;
+  const Heading = landing ? "h1" : "h2";
   // Phones have no arrows, so a horizontal swipe changes the slide
   const touch = useRef<{ x: number; y: number } | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
@@ -57,10 +58,13 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             {i === index && (
               <div className="stagger max-w-[560px] md:pl-16 lg:pl-20">
                 {s.eyebrow && <p className="text-base sm:text-lg md:text-xl">{s.eyebrow}</p>}
-                {s.title && <h2 className="mt-3 text-[32px] leading-[1.1] [overflow-wrap:anywhere] sm:text-[38px] md:text-[60px]">{s.title}</h2>}
-                <Link href={s.link} className="btn-light mt-6 md:mt-8">
-                  {s.button || t.common.shopNow}
-                </Link>
+                {s.title && <Heading className="mt-3 text-[32px] leading-[1.1] [overflow-wrap:anywhere] sm:text-[38px] md:text-[60px]">{s.title}</Heading>}
+                {s.text && <p className="mt-3 whitespace-pre-line [overflow-wrap:anywhere] md:text-lg">{s.text}</p>}
+                {s.link && (
+                  <Link href={s.link} className="btn-light mt-6 md:mt-8">
+                    {s.button || t.common.shopNow}
+                  </Link>
+                )}
               </div>
             )}
           </div>

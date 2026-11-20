@@ -2,7 +2,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HeroSlider } from "@/components/site/HeroSlider";
+import { defaultHero } from "@/lib/content";
 import { listLandings } from "@/lib/landing";
+import { LANDING_PRODUCT_LIMIT } from "@/lib/landing-limits";
 import { getProducts } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 import { getSiteInfo } from "@/lib/settings";
@@ -19,7 +22,12 @@ async function LandingContent({ params }: { params: Promise<{ slug: string }> })
 
   const [catalog, info] = await Promise.all([getProducts("ka-ge"), getSiteInfo("ka-ge")]);
   const productsById = new Map(catalog.map((product) => [product.id, product]));
-  const products = page.productIds.flatMap((id) => productsById.get(id) ?? []);
+  const products = page.productIds.flatMap((id) => productsById.get(id) ?? []).slice(0, LANDING_PRODUCT_LIMIT);
+  const slides = page.heroSlides.map((slide) => ({
+    ...slide,
+    image: slide.image || defaultHero[0].image,
+    link: products.length && slide.button ? "#products" : "",
+  }));
   const logo = page.logo || info.logo;
   const homeLabel = "Gilich Jewelry House — მთავარი გვერდი";
 
@@ -37,19 +45,7 @@ async function LandingContent({ params }: { params: Promise<{ slug: string }> })
         </div>
       </header>
       <main>
-        <section className={page.heroImage ? "campaign-hero" : "campaign-hero campaign-text-only"}>
-          <div className="campaign-hero-copy">
-            {page.heroEyebrow && <span className="campaign-eyebrow">{page.heroEyebrow}</span>}
-            <h1>{page.heroTitle}</h1>
-            {page.heroText && <p>{page.heroText}</p>}
-            {products.length > 0 && page.heroButton && (
-              <a className="campaign-button" href="#products">
-                {page.heroButton} <span aria-hidden="true">↗</span>
-              </a>
-            )}
-          </div>
-          {page.heroImage && <div className="campaign-hero-image"><img src={page.heroImage} alt="" fetchPriority="high" /></div>}
-        </section>
+        <HeroSlider slides={slides} landing />
         {products.length > 0 && (
           <section id="products" className="campaign-products campaign-wrap">
             <div className="campaign-section-heading">

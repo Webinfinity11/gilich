@@ -13,7 +13,8 @@ import { toCents } from "@/lib/money";
 import { ORDER_STATUSES } from "@/lib/orders";
 import { slugify } from "@/lib/slug";
 import { saveImage } from "@/lib/storage";
-import { landingDefaults, listLandings, type Landing } from "@/lib/landing";
+import { landingDefaults, listLandings, normalizeLandingSlides, type Landing } from "@/lib/landing";
+import { LANDING_PRODUCT_LIMIT } from "@/lib/landing-limits";
 
 export type ActionState = { ok: boolean; message: string } | null;
 
@@ -24,10 +25,11 @@ export async function saveLanding(input: Landing): Promise<{ ok: boolean; messag
   if (!slug || !input.title.trim()) return { ok: false, message: "Enter a title and URL slug." };
   const pages = await listLandings();
   if (pages.some((page) => page.id !== id && page.slug === slug)) return { ok: false, message: "This URL is already in use." };
-  const fields = Object.keys(landingDefaults).filter((key) => key !== "published" && key !== "productIds");
+  const fields = Object.keys(landingDefaults).filter((key) => key !== "published" && key !== "productIds" && key !== "heroSlides");
   const values = Object.fromEntries(fields.map((key) => [key, typeof input[key as keyof Landing] === "string" ? (input[key as keyof Landing] as string).trim().slice(0, 10000) : ""]));
-  const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))];
-  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds });
+  const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, LANDING_PRODUCT_LIMIT);
+  const heroSlides = normalizeLandingSlides(input.heroSlides);
+  const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds, heroSlides });
   const key = `landing:${id}`;
   await db.setting.upsert({ where: { key }, create: { key, value }, update: { value } });
   return { ok: true, message: "Saved successfully.", id, slug };

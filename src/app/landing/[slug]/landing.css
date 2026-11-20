@@ -1,25 +1,20 @@
-.campaign { background: #f9f7f3; color: #24201d; font-family: Arial, sans-serif; }
+.campaign { background: #f9f7f3; color: #24201d; }
 .campaign-wrap { width: min(1320px, calc(100% - 64px)); margin: auto; }
 .campaign-announcement { padding: 9px 20px; background: #27211e; text-align: center; color: #fff; font-size: 12px; letter-spacing: .04em; }
 .campaign-header { background: #fff; }
 .campaign-header-inner { min-height: 85px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .campaign-logo { width: auto; max-width: 190px; height: 48px; object-fit: contain; }
 .campaign-header-button { border: 1px solid #29231f; padding: 12px 20px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-.campaign-hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 610px; background: #eee8df; }
-.campaign-hero-copy { align-self: center; padding: 90px max(32px, 9vw); }
-.campaign-eyebrow { color: #9b8069; font-size: 11px; font-weight: 600; letter-spacing: .19em; text-transform: uppercase; }
-.campaign h1, .campaign h2 { font-family: Georgia, serif; font-weight: 400; line-height: 1.2; }
-.campaign h1 { margin: 23px 0; font-size: clamp(36px, 4vw, 66px); }
-.campaign-hero-copy p, .campaign-about-copy p { max-width: 490px; color: #6e625a; line-height: 1.9; white-space: pre-line; }
-.campaign-button { display: inline-flex; gap: 30px; margin-top: 34px; padding: 16px 22px; background: #29231f; color: #fff; font-size: 12px; letter-spacing: .07em; }
-.campaign-hero-image, .campaign-about-image { position: relative; min-height: 420px; background: #d9cec0; }
-.campaign-hero-image img, .campaign-about-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.campaign-about-copy p { max-width: 490px; color: #6e625a; line-height: 1.9; white-space: pre-line; }
+.campaign-about-image { position: relative; min-height: 420px; background: #d9cec0; }
+.campaign-about-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .campaign-text-only { grid-template-columns: minmax(0, 1fr); min-height: auto; text-align: center; }
 .campaign-text-only p { margin-inline: auto; }
 .campaign-products { padding-top: 105px; padding-bottom: 110px; }
 .campaign-section-heading { margin-bottom: 40px; text-align: center; }
-.campaign h2 { margin-top: 15px; font-size: clamp(30px, 3vw, 46px); }
-.campaign-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px 20px; }
+.campaign-section-heading h2, .campaign-about h2 { font-family: Georgia, serif; font-weight: 400; line-height: 1.2; font-size: clamp(30px, 3vw, 46px); }
+.campaign-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.campaign-product { min-width: 0; overflow-wrap: anywhere; }
 .campaign-product-image { aspect-ratio: 1; background: #eeeae5; overflow: hidden; }
 .campaign-product-image img { width: 100%; height: 100%; object-fit: cover; }
 .campaign-product-link { display: block; color: inherit; }
@@ -41,7 +36,27 @@
 .campaign-contacts { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 24px; font-size: 14px; }
 .campaign-contacts a { color: #eee7dd; overflow-wrap: anywhere; transition: color .2s; }
 .campaign-contacts a:hover { color: #c9ab8c; }
-@media (max-width: 700px) { .campaign-wrap { width: calc(100% - 36px); } .campaign-header-inner { min-height: 70px; } .campaign-logo { height: 38px; max-width: 145px; } .campaign-header-button { padding: 10px; font-size: 10px; } .campaign-hero, .campaign-about { grid-template-columns: 1fr; } .campaign-hero-copy { padding: 70px 24px; } .campaign-hero-image, .campaign-about-image { min-height: 320px; } .campaign-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 12px; } .campaign-products { padding-top: 70px; padding-bottom: 75px; } .campaign-about-copy { padding: 65px 24px; } .campaign-footer-inner { flex-direction: column; } }
+@media (max-width: 700px) {
+  .campaign-wrap { width: calc(100% - 36px); }
+  .campaign-header-inner { min-height: 70px; }
+  .campaign-logo { height: 38px; max-width: 145px; }
+  .campaign-header-button { padding: 10px; font-size: 10px; }
+  .campaign-about { grid-template-columns: 1fr; }
+  .campaign-about-image { min-height: 320px; }
+  .campaign-grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 12px) / 2);
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding: 6px;
+    margin-inline: -6px;
+  }
+  .campaign-product { scroll-snap-align: start; }
+  .campaign-products { padding-top: 70px; padding-bottom: 75px; }
+  .campaign-about-copy { padding: 65px 24px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .campaign-product-link img, .campaign-contacts a { transition: none; }
   .campaign-product-link:hover img { transform: none; }
