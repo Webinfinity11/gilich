@@ -1,14 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { placeOrder } from "@/app/actions";
 import { formatPrice } from "@/lib/money";
 import { useI18n } from "./lang";
-import { LLink as Link } from "./LLink";
 import { useStore } from "./store";
 
-export function CheckoutForm() {
+export function CheckoutForm({ campaignHref }: { campaignHref?: string }) {
   const router = useRouter();
   const { cart, ready, cartTotal, clearCart } = useStore();
   const { t, lang, lp } = useI18n();
@@ -32,7 +32,7 @@ export function CheckoutForm() {
     return (
       <div className="container-site py-16 text-center">
         <p className="text-ink">{c.empty}</p>
-        <Link href="/shop" className="btn-dark mt-6">
+        <Link href={campaignHref ?? lp("/shop")} className="btn-dark mt-6">
           {t.common.returnToShop}
         </Link>
       </div>
@@ -51,7 +51,8 @@ export function CheckoutForm() {
       });
       if (res.ok) {
         clearCart();
-        router.push(lp(`/order-received/${res.token}`));
+        const receiptPath = `/order-received/${res.token}`;
+        router.push(campaignHref ? `${campaignHref}${receiptPath}` : lp(receiptPath));
       } else {
         setError(res.message);
       }

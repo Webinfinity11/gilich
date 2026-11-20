@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { BLACK_FRIDAY_PATH, INTERNAL_BLACK_FRIDAY_PATH } from "@/lib/landing-path";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -8,6 +9,12 @@ export async function proxy(request: NextRequest) {
     return adminGate(request, pathname);
   }
 
+  if (pathname === BLACK_FRIDAY_PATH || pathname.startsWith(`${BLACK_FRIDAY_PATH}/`)) return NextResponse.next();
+  if (pathname === INTERNAL_BLACK_FRIDAY_PATH || pathname.startsWith(`${INTERNAL_BLACK_FRIDAY_PATH}/`)) {
+    const url = request.nextUrl.clone();
+    url.pathname = BLACK_FRIDAY_PATH + pathname.slice(INTERNAL_BLACK_FRIDAY_PATH.length);
+    return NextResponse.redirect(url, 308);
+  }
   if (pathname === "/landing" || pathname.startsWith("/landing/")) return NextResponse.next();
 
   // Georgian pages are served from /ka-ge/... as-is

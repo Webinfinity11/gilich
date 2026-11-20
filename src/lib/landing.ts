@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { cache } from "react";
+import { connection } from "next/server";
 import { LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 
 export type LandingSlide = {
@@ -57,3 +59,8 @@ export async function listLandings(): Promise<Landing[]> {
     } catch { return []; }
   });
 }
+
+export const getPublishedLanding = cache(async (slug: string) => {
+  await connection();
+  return (await listLandings()).find((page) => page.slug === slug && page.published);
+});

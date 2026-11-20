@@ -61,7 +61,9 @@ function write(key: string, value: unknown) {
   }
 }
 
-export function StoreProvider({ children }: { children: React.ReactNode }) {
+export function StoreProvider({ children, scope }: { children: React.ReactNode; scope?: string }) {
+  const cartKey = scope ? `${CART_KEY}:${scope}` : CART_KEY;
+  const wishKey = scope ? `${WISH_KEY}:${scope}` : WISH_KEY;
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [ready, setReady] = useState(false);
@@ -69,18 +71,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from localStorage after mount
-    setCart(read<CartItem[]>(CART_KEY, []));
-    setWishlist(read<WishItem[]>(WISH_KEY, []));
+    setCart(read<CartItem[]>(cartKey, []));
+    setWishlist(read<WishItem[]>(wishKey, []));
     setReady(true);
-  }, []);
+  }, [cartKey, wishKey]);
 
   useEffect(() => {
-    if (ready) write(CART_KEY, cart);
-  }, [cart, ready]);
+    if (ready) write(cartKey, cart);
+  }, [cartKey, cart, ready]);
 
   useEffect(() => {
-    if (ready) write(WISH_KEY, wishlist);
-  }, [wishlist, ready]);
+    if (ready) write(wishKey, wishlist);
+  }, [wishKey, wishlist, ready]);
 
   const addToCart = useCallback<StoreValue["addToCart"]>((item, qty = 1) => {
     const key = `${item.productId}:${item.variationId ?? 0}`;

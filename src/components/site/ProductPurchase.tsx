@@ -13,9 +13,10 @@ import { ZoomImage } from "./ZoomImage";
 const featureIcons = ["/media/icon3-product-detail.png", "/media/icon2-product-detail.png", "/media/h1-icon4.png"];
 
 /** Gallery + options + add to cart. Picking a variation switches price and photo. */
-export function ProductPurchase({ product, children }: { product: ProductDetail; children: React.ReactNode }) {
-  const { addToCart } = useStore();
+export function ProductPurchase({ product, children, onAdded }: { product: ProductDetail; children?: React.ReactNode; onAdded?: () => void }) {
+  const { addToCart, ready } = useStore();
   const { t } = useI18n();
+  const Heading = onAdded ? "h2" : "h1";
   const inStock = (v: { stock: number | null }) => v.stock === null || v.stock > 0;
 
   // Main product first; a variation applies only when the customer picks one
@@ -56,6 +57,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
       },
       qty,
     );
+    onAdded?.();
   };
 
   return (
@@ -89,7 +91,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
       </div>
 
       <div>
-        <h1 className="text-[28px] text-ink md:text-[32px]">{title}</h1>
+        <Heading className="text-[28px] text-ink md:text-[32px]">{title}</Heading>
         <div className="mt-2 text-[28px] font-medium text-ink">
           {variation ? (
             variation.salePrice !== null && variation.salePrice < variation.price ? (
@@ -164,7 +166,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
             </div>
           )}
 
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          {!onAdded && <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <WishlistButton product={product} className="flex size-[38px] items-center justify-center border border-line hover:border-ink" />
             </div>
@@ -188,7 +190,7 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                 <WhatsAppIcon className="size-4" /> {t.product.shareWhatsapp}
               </button>
             </div>
-          </div>
+          </div>}
 
           {stock !== null && <p className={`mb-3 text-sm ${outOfStock ? "text-red-600" : "text-green-700"}`}>{outOfStock ? t.product.outOfStock : t.product.inStock(stock)}</p>}
 
@@ -209,14 +211,14 @@ export function ProductPurchase({ product, children }: { product: ProductDetail;
                 +
               </button>
             </div>
-            <button type="button" onClick={add} disabled={outOfStock} className="btn-dark h-[48px] min-w-0 flex-1 !px-4 sm:flex-none sm:!px-8">
+            <button type="button" onClick={add} disabled={outOfStock || (!!onAdded && !ready)} className="btn-dark h-[48px] min-w-0 flex-1 !px-4 sm:flex-none sm:!px-8">
               {t.product.addToCart}
             </button>
           </div>
 
-          <div className="mt-4">
+          {!onAdded && <div className="mt-4">
             <WishlistButton product={product} label className="flex items-center gap-2 text-ink hover:opacity-70" />
-          </div>
+          </div>}
         </div>
 
         <div className="mt-6 border-t border-line pt-6">

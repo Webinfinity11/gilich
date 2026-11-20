@@ -1,14 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { formatPrice } from "@/lib/money";
 import { CloseIcon, SadIcon } from "./icons";
 import { useI18n } from "./lang";
-import { LLink as Link } from "./LLink";
 import { useStore } from "./store";
 
-export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
+export function CartView({ emptyExtra, campaignHref }: { emptyExtra?: React.ReactNode; campaignHref?: string }) {
   const { cart, ready, cartTotal, setQty, removeFromCart } = useStore();
-  const { t } = useI18n();
+  const { t, lp } = useI18n();
+  const shopHref = campaignHref ?? lp("/shop");
 
   if (!ready) return <div className="min-h-[400px]" />;
 
@@ -18,7 +19,7 @@ export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
         <div className="text-center">
           <SadIcon className="mx-auto size-16 text-ink" />
           <p className="mt-5 text-ink">{t.cart.empty}</p>
-          <Link href="/shop" className="btn-dark mt-6">
+          <Link href={shopHref} className="btn-dark mt-6">
             {t.common.returnToShop}
           </Link>
         </div>
@@ -41,9 +42,9 @@ export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
-                    <Link href={`/product/${item.slug}`} className="text-ink [overflow-wrap:anywhere] hover:underline">
-                      {item.name}
-                    </Link>
+                    {campaignHref
+                      ? <span className="text-ink [overflow-wrap:anywhere]">{item.name}</span>
+                      : <Link href={lp(`/product/${item.slug}`)} className="text-ink [overflow-wrap:anywhere] hover:underline">{item.name}</Link>}
                     {item.variation && <p className="text-sm text-muted">{item.variation}</p>}
                     <p className="mt-1 text-sm text-muted">{formatPrice(item.price)}</p>
                   </div>
@@ -89,9 +90,9 @@ export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
                   )}
                 </td>
                 <td className="py-5 pr-4">
-                  <Link href={`/product/${item.slug}`} className="text-ink hover:underline">
-                    {item.name}
-                  </Link>
+                  {campaignHref
+                    ? <span className="text-ink">{item.name}</span>
+                    : <Link href={lp(`/product/${item.slug}`)} className="text-ink hover:underline">{item.name}</Link>}
                   {item.variation && <p className="text-sm text-muted">{item.variation}</p>}
                 </td>
                 <td className="py-5">{formatPrice(item.price)}</td>
@@ -116,7 +117,7 @@ export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
             ))}
           </tbody>
         </table>
-        <Link href="/shop" className="mt-6 inline-block border-b border-ink text-sm uppercase">
+        <Link href={shopHref} className="mt-6 inline-block border-b border-ink text-sm uppercase">
           {t.common.continueShopping}
         </Link>
       </div>
@@ -137,7 +138,7 @@ export function CartView({ emptyExtra }: { emptyExtra: React.ReactNode }) {
             <dd>{formatPrice(cartTotal)}</dd>
           </div>
         </dl>
-        <Link href="/checkout" className="btn-dark mt-8 w-full">
+        <Link href={campaignHref ? `${campaignHref}/checkout` : lp("/checkout")} className="btn-dark mt-8 w-full">
           {t.cart.proceed}
         </Link>
       </div>
