@@ -16,6 +16,31 @@ import { pick, type Lang } from "@/lib/i18n";
 type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds" | "heroSlides" | "discountPercent" | "design" | "english">;
 const slideFields = { eyebrow: "Small heading", title: "Main heading", text: "Description", button: "Button text" } as const;
 
+function BilingualField({ label, georgian, english, onGeorgian, onEnglish, multiline = false }: {
+  label: string;
+  georgian: string;
+  english: string;
+  onGeorgian: (value: string) => void;
+  onEnglish: (value: string) => void;
+  multiline?: boolean;
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {([
+        { language: "Georgian", lang: "ka", value: georgian, onChange: onGeorgian },
+        { language: "English", lang: "en", value: english, onChange: onEnglish },
+      ]).map(({ language, lang, value, onChange }) => (
+        <label key={lang} className="block min-w-0 space-y-1 text-sm font-medium">
+          <span>{label} <span className="text-xs text-zinc-500">({language})</span></span>
+          {multiline
+            ? <textarea lang={lang} rows={3} className="admin-input" value={value} onChange={(event) => onChange(event.target.value)} />
+            : <input lang={lang} className="admin-input" value={value} onChange={(event) => onChange(event.target.value)} />}
+        </label>
+      ))}
+    </div>
+  );
+}
+
 export function LandingEditor({ initial, products }: { initial: Landing; products: { id: number; name: string; nameKa: string | null }[] }) {
   const [productLanguage, setProductLanguage] = useState<Lang>("en");
   const [page, setPage] = useState(() => {
@@ -28,6 +53,11 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
   const router = useRouter();
   const set = (key: TextKey, value: string) => setPage((old) => ({ ...old, [key]: value }));
   const field = (key: TextKey, label: string, multiline = false) => <label className="block space-y-1 text-sm font-medium"><span>{label}</span>{multiline ? <textarea className="admin-input min-h-28" value={page[key]} onChange={(e) => set(key, e.target.value)} /> : <input className="admin-input" value={page[key]} onChange={(e) => set(key, e.target.value)} />}</label>;
+  const bilingualField = (key: keyof typeof landingCopyFields, multiline = false) => (
+    <BilingualField label={landingCopyFields[key]} georgian={page[key]} english={page.english[key] ?? ""} multiline={multiline}
+      onGeorgian={(value) => set(key, value)}
+      onEnglish={(value) => setPage((current) => ({ ...current, english: { ...current.english, [key]: value } }))} />
+  );
   const image = (key: "logo" | "aboutImage", label: string) => <div className="space-y-2 text-sm font-medium"><span>{label}</span><SingleImage value={page[key]} onChange={(url) => set(key, url)} aspect={key === "logo" ? "aspect-[4/1]" : "aspect-[16/9]"} />{page[key] && <button type="button" className="text-red-700 underline" onClick={() => set(key, "")}>Remove image</button>}</div>;
 
   function updateSlide(id: string, patch: Partial<LandingSlide>) {
@@ -81,7 +111,11 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
   }
   return <div className="space-y-6 pb-20"><div className="flex flex-wrap items-end justify-between gap-4"><div><Link href="/admin/landings" className="text-sm text-zinc-500 underline">← Landing pages</Link><h1 className="mt-2 text-2xl font-semibold">{page.id ? "Edit landing" : "Create landing"}</h1></div>{savedPage.id && savedPage.published && <a target="_blank" rel="noreferrer" href={landingPath(savedPage.slug)} className="admin-btn-ghost">Open landing ↗</a>}</div>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Page settings</h2>{field("title", "Campaign name")}{field("slug", "URL slug (e.g. black-friday)")}<p className="text-sm text-zinc-500 md:col-span-2">Address: {landingPath(page.slug || "your-campaign")}</p><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={page.published} onChange={(e) => setPage({ ...page, published: e.target.checked })} /> Publish this page</label><p className="text-sm text-zinc-500">{savedPage.id && savedPage.published ? "The open link shows the last saved version." : "Save and publish to open the landing page."}</p></section>
-    <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Header</h2>{field("announcement", "Announcement text")}{field("headerButton", "Header button text")}{image("logo", "Logo (optional; site logo is used by default)")}</section>
+    <section className="admin-card space-y-4 p-6">
+      <h2 className="text-lg font-semibold">Header</h2>
+      {bilingualField("announcement")}{bilingualField("headerButton")}
+      <div className="sm:max-w-xs">{image("logo", "Logo (optional; site logo is used by default)")}</div>
+    </section>
     <section className="admin-card space-y-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">Hero slider</h2>
@@ -97,19 +131,17 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
               <button type="button" className="admin-btn-ghost text-red-700" onClick={() => setPage((current) => ({ ...current, heroSlides: current.heroSlides.filter((item) => item.id !== slide.id) }))}>Remove</button>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <div className="space-y-2">
               <SingleImage value={slide.image} onChange={(image) => updateSlide(slide.id, { image })} />
               {slide.image && <button type="button" className="text-sm text-red-700 underline" onClick={() => updateSlide(slide.id, { image: "" })}>Use default image</button>}
             </div>
             <div className="space-y-3">
               {(Object.keys(slideFields) as (keyof typeof slideFields)[]).map((key) => (
-                <label key={key} className="block space-y-1 text-sm font-medium">
-                  <span>{slideFields[key]}</span>
-                  {key === "text"
-                    ? <textarea className="admin-input" value={slide[key]} onChange={(e) => updateSlide(slide.id, { [key]: e.target.value })} />
-                    : <input className="admin-input" value={slide[key]} onChange={(e) => updateSlide(slide.id, { [key]: e.target.value })} />}
-                </label>
+                <BilingualField key={key} label={slideFields[key]} georgian={slide[key]} english={slide.english?.[key] ?? ""}
+                  multiline={key === "text"}
+                  onGeorgian={(value) => updateSlide(slide.id, { [key]: value })}
+                  onEnglish={(value) => updateSlide(slide.id, { english: { ...slide.english, [key]: value } })} />
               ))}
             </div>
           </div>
@@ -121,7 +153,7 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
         <h2 className="text-lg font-semibold">Products</h2>
         <LangSwitcher align="end" language={productLanguage} onSelect={setProductLanguage} />
       </div>
-      {field("productsTitle", "Section heading")}
+      {bilingualField("productsTitle")}
       <label className="block max-w-64 space-y-1 text-sm font-medium">
         <span>Campaign discount (%)</span>
         <input className="admin-input" type="number" min={0} max={100} step={1} value={page.discountPercent || ""} placeholder="0"
@@ -141,39 +173,16 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
         })}
       </div>
     </section>
-    <section className="admin-card grid gap-4 p-6 md:grid-cols-2">
-      <h2 className="text-lg font-semibold md:col-span-2">About</h2>
-      {field("aboutTitle", "Heading")}{field("aboutText", "Text", true)}{image("aboutImage", "About image")}
+    <section className="admin-card space-y-4 p-6">
+      <h2 className="text-lg font-semibold">About</h2>
+      {bilingualField("aboutTitle")}{bilingualField("aboutText", true)}
+      <div className="sm:max-w-sm">{image("aboutImage", "About image")}</div>
     </section>
-    <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Footer</h2>{field("footerText", "Footer text", true)}{field("footerPhone", "Phone")}{field("footerEmail", "Email")}</section>
-    <details className="admin-card p-6">
-      <summary className="cursor-pointer text-lg font-semibold">English translations</summary>
-      <p className="mt-4 text-sm text-zinc-500">Products use the catalog translations. Add English versions here for custom campaign text.</p>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {(Object.keys(landingCopyFields) as (keyof typeof landingCopyFields)[]).map((key) => (
-          <label key={key} className="block space-y-1 text-sm">
-            <span>{landingCopyFields[key]}</span>
-            <textarea rows={key === "aboutText" || key === "footerText" ? 3 : 1} className="admin-input" value={page.english[key] ?? ""}
-              onChange={(event) => {
-                const value = event.target.value;
-                setPage((current) => ({ ...current, english: { ...current.english, [key]: value } }));
-              }} />
-          </label>
-        ))}
-      </div>
-      {page.heroSlides.map((slide, index) => (
-        <fieldset key={slide.id} className="mt-4 grid gap-3 border-t border-zinc-200 pt-3 md:grid-cols-2">
-          <legend className="pr-2 text-sm font-semibold">Slide {index + 1}</legend>
-          {(Object.keys(slideFields) as (keyof typeof slideFields)[]).map((key) => (
-            <label key={key} className="block space-y-1 text-sm">
-              <span>{slideFields[key]}</span>
-              <textarea rows={key === "text" ? 3 : 1} className="admin-input" value={slide.english?.[key] ?? ""}
-                onChange={(event) => updateSlide(slide.id, { english: { ...slide.english, [key]: event.target.value } })} />
-            </label>
-          ))}
-        </fieldset>
-      ))}
-    </details>
+    <section className="admin-card space-y-4 p-6">
+      <h2 className="text-lg font-semibold">Footer</h2>
+      {bilingualField("footerText", true)}
+      <div className="grid gap-3 sm:grid-cols-2">{field("footerPhone", "Phone")}{field("footerEmail", "Email")}</div>
+    </section>
     <LandingDesignEditor design={page.design} onChange={(update) => setPage((current) => ({ ...current, design: update(current.design) }))} />
     <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t border-zinc-200 bg-zinc-100/95 py-4"><button className="admin-btn" disabled={pending} onClick={save}>{pending ? "Saving..." : "Save landing"}</button>{page.id && <button className="admin-btn-ghost text-red-700" disabled={pending} onClick={() => { if (confirm("Delete this landing page?")) start(() => deleteLanding(page.id)); }}>Delete</button>}<span role="status" className="text-sm">{message}</span></div>
   </div>;
