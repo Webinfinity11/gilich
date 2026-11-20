@@ -17,7 +17,7 @@ import { landingDefaults, listLandings, type Landing } from "@/lib/landing";
 
 export type ActionState = { ok: boolean; message: string } | null;
 
-export async function saveLanding(input: Landing): Promise<{ ok: boolean; message: string; id?: string }> {
+export async function saveLanding(input: Landing): Promise<{ ok: boolean; message: string; id?: string; slug?: string }> {
   await requireAdmin();
   const id = /^[a-f0-9-]{36}$/.test(input.id) ? input.id : crypto.randomUUID();
   const slug = slugify(input.slug);
@@ -30,7 +30,7 @@ export async function saveLanding(input: Landing): Promise<{ ok: boolean; messag
   const value = JSON.stringify({ ...values, slug, id, published: input.published === true, productIds });
   const key = `landing:${id}`;
   await db.setting.upsert({ where: { key }, create: { key, value }, update: { value } });
-  return { ok: true, message: "Saved successfully.", id };
+  return { ok: true, message: "Saved successfully.", id, slug };
 }
 
 export async function deleteLanding(id: string) {

@@ -10,15 +10,32 @@ import type { Landing } from "@/lib/landing";
 type TextKey = Exclude<keyof Landing, "id" | "published" | "productIds">;
 export function LandingEditor({ initial, products }: { initial: Landing; products: { id: number; name: string; nameKa: string | null }[] }) {
   const [page, setPage] = useState(initial);
+  const [savedPage, setSavedPage] = useState(initial);
   const [message, setMessage] = useState("");
   const [pending, start] = useTransition();
   const router = useRouter();
   const set = (key: TextKey, value: string) => setPage((old) => ({ ...old, [key]: value }));
   const field = (key: TextKey, label: string, multiline = false) => <label className="block space-y-1 text-sm font-medium"><span>{label}</span>{multiline ? <textarea className="admin-input min-h-28" value={page[key]} onChange={(e) => set(key, e.target.value)} /> : <input className="admin-input" value={page[key]} onChange={(e) => set(key, e.target.value)} />}</label>;
   const image = (key: "logo" | "heroImage" | "aboutImage", label: string) => <div className="space-y-2 text-sm font-medium"><span>{label}</span><SingleImage value={page[key]} onChange={(url) => set(key, url)} aspect={key === "logo" ? "aspect-[4/1]" : "aspect-[16/9]"} />{page[key] && <button type="button" className="text-red-700 underline" onClick={() => set(key, "")}>Remove image</button>}</div>;
-  function save() { start(async () => { try { const result = await saveLanding(page); setMessage(result.message); if (result.ok && result.id && !page.id) { setPage((old) => ({ ...old, id: result.id! })); router.replace(`/admin/landings/${result.id}`); } else if (result.ok) router.refresh(); } catch { setMessage("Could not save. Please try again."); } }); }
-  return <div className="space-y-6 pb-20"><div><Link href="/admin/landings" className="text-sm text-zinc-500 underline">← Landing pages</Link><h1 className="mt-2 text-2xl font-semibold">{page.id ? "Edit landing" : "Create landing"}</h1></div>
-    <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Page settings</h2>{field("title", "Campaign name")}{field("slug", "URL slug (e.g. black-friday)")}<p className="text-sm text-zinc-500 md:col-span-2">Address: /landing/{page.slug || "your-campaign"}</p><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={page.published} onChange={(e) => setPage({ ...page, published: e.target.checked })} /> Publish this page</label>{page.id && page.published && <a target="_blank" rel="noreferrer" href={`/landing/${page.slug}`} className="text-sm underline">Open published page ↗</a>}</section>
+  function save() {
+    start(async () => {
+      try {
+        const result = await saveLanding(page);
+        setMessage(result.message);
+        const { id, slug } = result;
+        if (!result.ok || !id || !slug) return;
+
+        setSavedPage({ ...page, id, slug });
+        setPage((current) => ({ ...current, id, slug: current.slug === page.slug ? slug : current.slug }));
+        if (page.id) router.refresh();
+        else router.replace(`/admin/landings/${id}`);
+      } catch {
+        setMessage("Could not save. Please try again.");
+      }
+    });
+  }
+  return <div className="space-y-6 pb-20"><div className="flex flex-wrap items-end justify-between gap-4"><div><Link href="/admin/landings" className="text-sm text-zinc-500 underline">← Landing pages</Link><h1 className="mt-2 text-2xl font-semibold">{page.id ? "Edit landing" : "Create landing"}</h1></div>{savedPage.id && savedPage.published && <a target="_blank" rel="noreferrer" href={`/landing/${savedPage.slug}`} className="admin-btn-ghost">Open landing ↗</a>}</div>
+    <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Page settings</h2>{field("title", "Campaign name")}{field("slug", "URL slug (e.g. black-friday)")}<p className="text-sm text-zinc-500 md:col-span-2">Address: /landing/{page.slug || "your-campaign"}</p><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={page.published} onChange={(e) => setPage({ ...page, published: e.target.checked })} /> Publish this page</label><p className="text-sm text-zinc-500">{savedPage.id && savedPage.published ? "The open link shows the last saved version." : "Save and publish to open the landing page."}</p></section>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Header</h2>{field("announcement", "Announcement text")}{field("headerButton", "Header button text")}{image("logo", "Logo (optional; site logo is used by default)")}</section>
     <section className="admin-card grid gap-4 p-6 md:grid-cols-2"><h2 className="text-lg font-semibold md:col-span-2">Hero</h2>{field("heroEyebrow", "Small heading")}{field("heroTitle", "Main heading")}{field("heroText", "Description", true)}{field("heroButton", "Button text")}{image("heroImage", "Hero image")}</section>
     <section className="admin-card space-y-4 p-6"><h2 className="text-lg font-semibold">Products</h2>{field("productsTitle", "Section heading")}<p className="text-sm text-zinc-500">Choose published products to display. Product details and prices come from the catalog.</p><div className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-zinc-200 p-4 sm:grid-cols-2">{products.map((p) => <label key={p.id} className="flex items-start gap-2 text-sm"><input type="checkbox" checked={page.productIds.includes(p.id)} onChange={(e) => setPage((old) => ({ ...old, productIds: e.target.checked ? [...old.productIds, p.id] : old.productIds.filter((id) => id !== p.id) }))} />{p.nameKa || p.name}</label>)}</div></section>
