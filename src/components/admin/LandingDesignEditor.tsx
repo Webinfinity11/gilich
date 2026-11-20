@@ -40,8 +40,9 @@ export function LandingDesignEditor({ design, onChange }: {
   }
 
   return (
-    <>
-      <section className="admin-card space-y-4 p-6">
+    <details className="admin-card p-6">
+      <summary className="cursor-pointer text-lg font-semibold">Design and layout</summary>
+      <section className="mt-5 space-y-4 border-t border-zinc-200 pt-5">
         <h2 className="text-lg font-semibold">Section order and visibility</h2>
         <ol className="divide-y divide-zinc-200 rounded-lg border border-zinc-200">
           {design.sections.map((section, index) => (
@@ -63,8 +64,15 @@ export function LandingDesignEditor({ design, onChange }: {
             </li>
           ))}
         </ol>
+        <label className="block max-w-xs space-y-1 text-sm">
+          <span>About image position on desktop</span>
+          <select className="admin-input" value={design.aboutImageSide} onChange={(event) =>
+            set("aboutImageSide", event.target.value === "right" ? "right" : "left")}>
+            <option value="left">Left</option><option value="right">Right</option>
+          </select>
+        </label>
       </section>
-      <section className="admin-card space-y-4 p-6">
+      <section className="mt-5 space-y-4 border-t border-zinc-200 pt-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Color theme</h2>
           <button type="button" className="admin-btn-ghost" onClick={() => set("theme", { ...landingTheme })}>Reset colors</button>
@@ -76,7 +84,7 @@ export function LandingDesignEditor({ design, onChange }: {
           ))}
         </div>
       </section>
-      <section className="admin-card space-y-4 p-6">
+      <section className="mt-5 space-y-4 border-t border-zinc-200 pt-5">
         <h2 className="text-lg font-semibold">Hero appearance</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <ColorField label="Overlay color" value={design.overlayColor} onChange={(value) => set("overlayColor", value)} />
@@ -109,6 +117,6 @@ export function LandingDesignEditor({ design, onChange }: {
           </label>
         </div>
       </section>
-    </>
+    </details>
   );
 }
