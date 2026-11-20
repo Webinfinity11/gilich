@@ -14,7 +14,6 @@ import { ORDER_STATUSES } from "@/lib/orders";
 import { slugify } from "@/lib/slug";
 import { saveImage } from "@/lib/storage";
 import { landingDefaults, listLandings, normalizeLandingSlides, validLandingDiscount, type Landing } from "@/lib/landing";
-import { LANDING_PRODUCT_LIMIT } from "@/lib/landing-limits";
 import { normalizeLandingDesign } from "@/lib/landing-design";
 import { landingEnglishDefaults, normalizeEnglishCopy } from "@/lib/landing-copy";
 
@@ -31,7 +30,7 @@ export async function saveLanding(input: Landing): Promise<{ ok: boolean; messag
   if (!validLandingDiscount(discountPercent)) return { ok: false, message: "Enter a whole discount percentage from 0 to 100." };
   const fields = Object.entries(landingDefaults).filter(([, value]) => typeof value === "string").map(([key]) => key);
   const values = Object.fromEntries(fields.map((key) => [key, typeof input[key as keyof Landing] === "string" ? (input[key as keyof Landing] as string).trim().slice(0, 10000) : ""]));
-  const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, LANDING_PRODUCT_LIMIT);
+  const productIds = [...new Set((Array.isArray(input.productIds) ? input.productIds : []).filter((id) => Number.isSafeInteger(id) && id > 0))];
   const heroSlides = normalizeLandingSlides(input.heroSlides);
   const design = normalizeLandingDesign(input.design);
   const english = normalizeEnglishCopy(input.english, landingEnglishDefaults);

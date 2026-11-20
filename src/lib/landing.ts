@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { cache } from "react";
 import { connection } from "next/server";
-import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
+import { LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 import { getProductsByIds } from "@/lib/catalog";
 import { defaultLandingDesign, normalizeLandingDesign, type LandingDesign } from "@/lib/landing-design";
 import type { Lang } from "@/lib/i18n";
@@ -88,5 +88,5 @@ export function validLandingDiscount(value: unknown): value is number {
 export const getLandingProducts = cache(async (page: Landing, lang: Lang = "ka-ge") => {
   const catalog = await getProductsByIds(page.productIds, lang);
   const byId = new Map(catalog.map((product) => [product.id, product]));
-  return page.productIds.flatMap((id) => byId.get(id) ?? []).slice(0, LANDING_PRODUCT_LIMIT);
+  return [...new Set(page.productIds)].flatMap((id) => byId.get(id) ?? []);
 });

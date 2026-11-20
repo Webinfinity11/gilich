@@ -8,7 +8,7 @@ import { deleteLanding, saveLanding } from "@/app/admin/actions";
 import { SingleImage } from "@/components/admin/SingleImage";
 import { LandingDesignEditor } from "@/components/admin/LandingDesignEditor";
 import type { Landing, LandingSlide } from "@/lib/landing";
-import { LANDING_PRODUCT_LIMIT, LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
+import { LANDING_SLIDE_LIMIT } from "@/lib/landing-limits";
 import { landingCopyFields } from "@/lib/landing-copy";
 import { LangSwitcher } from "@/components/site/LangSwitcher";
 import { pick, type Lang } from "@/lib/i18n";
@@ -45,7 +45,7 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
   const [productLanguage, setProductLanguage] = useState<Lang>("en");
   const [page, setPage] = useState(() => {
     const availableIds = new Set(products.map((product) => product.id));
-    return { ...initial, productIds: initial.productIds.filter((id) => availableIds.has(id)).slice(0, LANDING_PRODUCT_LIMIT) };
+    return { ...initial, productIds: [...new Set(initial.productIds)].filter((id) => availableIds.has(id)) };
   });
   const [savedPage, setSavedPage] = useState(initial);
   const [message, setMessage] = useState("");
@@ -88,7 +88,7 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
     setPage((current) => ({
       ...current,
       productIds: checked
-        ? [...new Set([...current.productIds, id])].slice(0, LANDING_PRODUCT_LIMIT)
+        ? [...new Set([...current.productIds, id])]
         : current.productIds.filter((selected) => selected !== id),
     }));
   }
@@ -160,13 +160,13 @@ export function LandingEditor({ initial, products }: { initial: Landing; product
           onChange={(event) => setPage((current) => ({ ...current, discountPercent: Number(event.target.value) }))} />
       </label>
       <p className="text-sm text-zinc-500">Applies to the current prices of the selected products in this campaign.</p>
-      <p className="text-sm text-zinc-500">Choose up to {LANDING_PRODUCT_LIMIT} products for one row ({page.productIds.length} selected).</p>
+      <p className="text-sm text-zinc-500">Choose products to display in the scrolling row ({page.productIds.length} selected).</p>
       <div className="grid max-h-80 gap-2 overflow-y-auto rounded-lg border border-zinc-200 p-4 sm:grid-cols-2">
         {products.map((product) => {
           const checked = page.productIds.includes(product.id);
           return (
             <label key={product.id} className="flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={checked} disabled={!checked && page.productIds.length >= LANDING_PRODUCT_LIMIT} onChange={(e) => toggleProduct(product.id, e.target.checked)} />
+              <input type="checkbox" checked={checked} onChange={(e) => toggleProduct(product.id, e.target.checked)} />
               <span lang={productLanguage === "en" ? "en" : "ka"}>{pick(productLanguage, product.name, product.nameKa)}</span>
             </label>
           );

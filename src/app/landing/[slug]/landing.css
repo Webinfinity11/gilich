@@ -14,8 +14,19 @@
 .campaign-products { padding-top: 105px; padding-bottom: 110px; }
 .campaign-section-heading { margin-bottom: 40px; text-align: center; }
 .campaign-section-heading h2, .campaign-about h2 { font-family: Georgia, serif; font-weight: 400; line-height: 1.2; font-size: clamp(30px, 3vw, 46px); }
-.campaign-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
-.campaign-product { min-width: 0; overflow-wrap: anywhere; }
+.campaign-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 60px) / 4);
+  gap: 20px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 6px;
+  padding: 6px;
+  margin-inline: -6px;
+}
+.campaign-product { min-width: 0; overflow-wrap: anywhere; scroll-snap-align: start; }
 .campaign :is(a, button):focus-visible { outline: 2px solid var(--campaign-accent, #9b8069); outline-offset: 2px; }
 .campaign-header-button:hover { color: var(--campaign-accent, #9b8069); }
 .campaign-about { display: grid; grid-template-columns: 1fr 1fr; background: var(--campaign-about, #e8e1d8); }
@@ -42,16 +53,9 @@
   .campaign-about { grid-template-columns: 1fr; }
   .campaign-about-image { min-height: 320px; }
   .campaign-grid {
-    grid-template-columns: none;
-    grid-auto-flow: column;
     grid-auto-columns: calc((100% - 12px) / 2);
     gap: 12px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    padding: 6px;
-    margin-inline: -6px;
   }
-  .campaign-product { scroll-snap-align: start; }
   .campaign-products { padding-top: 70px; padding-bottom: 75px; }
   .campaign-about-copy { padding: 65px 24px; }
 }
